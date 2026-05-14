@@ -83,6 +83,7 @@
       --radius: 12px;
     }
 
+    *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
       font-family: var(--font); background: var(--bg); color: var(--text);
@@ -258,8 +259,8 @@
     .feature-item p { font-size: 13px; color: var(--text-sec); line-height: 1.5; }
 
     /* ── STEPS ── */
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 100%; overflow: hidden; }
-    .step { text-align: center; padding: 32px 20px; background: var(--surface); border-radius: 12px; min-width: 0; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .step { text-align: center; padding: 32px 20px; background: var(--surface); border-radius: 12px; min-width: 0; overflow: hidden; }
     .step-num {
       width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: #fff;
       font-size: 18px; font-weight: 700;
@@ -267,7 +268,7 @@
       margin: 0 auto 16px;
     }
     .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-    .step p { font-size: 14px; color: var(--text-sec); line-height: 1.6; }
+    .step p { font-size: 14px; color: var(--text-sec); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; }
 
     /* ── CTA ── */
     .cta-section { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 100px; }
