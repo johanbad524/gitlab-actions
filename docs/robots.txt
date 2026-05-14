@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://termyanen.github.io/gitlab-actions/sitemap.xml

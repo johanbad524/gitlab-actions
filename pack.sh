@@ -16,6 +16,7 @@ zip -r "$ZIPNAME" . \
   -x "PRIVACY_POLICY.md" \
   -x "LICENSE" \
   -x "screenshots/*" \
+  -x "docs/*" \
   -x "*.crx" \
   -x "*.pem" \
   -x "*.zip"

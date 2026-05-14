@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitLab Actions - One-Click MR Workflow, Auto-Merge, Jira Integration</title>
+  <meta name="description" content="Free Chrome extension for GitLab merge requests. One-click rebase, auto-merge, version bump, CI job management, and deep Jira integration. Works with self-hosted GitLab. No API tokens needed.">
+  <meta name="keywords" content="GitLab, Chrome extension, browser extension, merge request, auto-merge, rebase, version bump, Jira integration, CI/CD, DevOps, code review, productivity, GitLab tools, MR workflow, GitLab plugin, GitLab automation, self-hosted GitLab, merge request actions, GitLab CI, pipeline management, developer tools">
+  <meta name="author" content="Roman Termyanen">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://termyanen.github.io/gitlab-actions">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="GitLab Actions - Automate Your GitLab MR Workflow">
+  <meta property="og:description" content="Free Chrome extension: one-click rebase, auto-merge, version bump, Jira integration for GitLab merge requests. No tokens needed.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://termyanen.github.io/gitlab-actions">
+  <meta property="og:site_name" content="GitLab Actions">
+  <meta property="og:image" content="https://termyanen.github.io/gitlab-actions/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ru_RU">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GitLab Actions - Automate Your GitLab MR Workflow">
+  <meta name="twitter:description" content="Free Chrome extension: one-click rebase, auto-merge, version bump, Jira integration for GitLab merge requests.">
+  <meta name="twitter:image" content="https://termyanen.github.io/gitlab-actions/og-image.png">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GitLab Actions",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Chrome",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "description": "Chrome extension for GitLab merge requests: one-click rebase, auto-merge, version bump, CI jobs, Jira integration. No tokens needed.",
+    "url": "https://termyanen.github.io/gitlab-actions",
+    "downloadUrl": "https://chromewebstore.google.com/detail/gitlab-mr-actions/lbploihmpffiihpgeojdlpcclegbdeak",
+    "screenshot": "https://termyanen.github.io/gitlab-actions/screenshots/1-mr-buttons-and-jira-badges.png",
+    "image": "https://termyanen.github.io/gitlab-actions/og-image.png",
+    "author": { "@type": "Person", "name": "Roman Termyanen", "url": "https://github.com/termyanen" },
+    "softwareVersion": "1.4.1",
+    "license": "https://opensource.org/licenses/MIT",
+    "inLanguage": ["en", "ru", "zh", "ja", "de", "fr", "es"],
+    "keywords": "GitLab, Chrome extension, merge request, auto-merge, rebase, Jira, CI/CD, DevOps"
+  }
+  </script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #18171d;
+      --bg-alt: #28272d;
+      --surface: #28272d;
+      --surface-hover: #3a383f;
+      --border: #3a383f;
+      --text: #ffffff;
+      --text-sec: #ececef;
+      --accent: #FC6D26;
+      --accent-hover: #E05D20;
+      --accent-glow: rgba(252, 109, 38, 0.15);
+      --orange: #FCA326;
+      --blue: #428fdc;
+      --green: #2da160;
+      --purple: #A855F7;
+      --cyan: #06B6D4;
+      --red: #ec5941;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --max-w: 1120px;
+      --radius: 12px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: var(--max-w); margin: 0 auto; padding: 0 24px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      font-weight: 700; font-size: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-brand svg { flex-shrink: 0; }
+    .nav-right { display: flex; align-items: center; gap: 20px; }
+    .nav-right a {
+      font-size: 14px; font-weight: 500; color: var(--text-sec);
+      transition: color 0.15s; cursor: pointer;
+    }
+    .nav-right a:hover { color: var(--text); }
+    .lang-switch {
+      font-size: 13px; font-weight: 600; color: var(--text-sec);
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 6px; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .lang-switch:hover { border-color: var(--text-sec); }
+    .btn-nav {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent); color: #fff !important;
+      padding: 8px 16px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      transition: background 0.15s, transform 0.1s; cursor: pointer;
+    }
+    .btn-nav:hover { background: var(--accent-hover); }
+    .btn-nav:active { transform: scale(0.97); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 140px 24px 40px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 500px;
+      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 500; color: var(--text-sec);
+      margin-bottom: 24px;
+    }
+    .hero-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 64px); font-weight: 700; line-height: 1.1;
+      letter-spacing: -0.02em; max-width: 780px; margin: 0 auto 20px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-sub {
+      font-size: 18px; color: var(--text-sec);
+      max-width: 600px; margin: 0 auto 36px; line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff;
+      padding: 14px 28px; border-radius: 10px;
+      font-size: 16px; font-weight: 600;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      cursor: pointer; box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 0 30px rgba(34, 197, 94, 0.25); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border);
+      padding: 14px 28px; border-radius: 10px;
+      font-size: 16px; font-weight: 600;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s; cursor: pointer;
+    }
+    .btn-secondary:hover { background: var(--surface-hover); border-color: var(--text-sec); }
+    .btn-secondary:active { transform: scale(0.97); }
+    .hero-stats { display: flex; gap: 40px; justify-content: center; margin-top: 48px; }
+    .hero-stat { text-align: center; min-width: 160px; }
+    .hero-stat-value { font-size: 32px; font-weight: 700; }
+    .hero-stat-value small { font-size: 20px; font-weight: 600; opacity: 0.7; }
+    .hero-stat-label { font-size: 13px; color: var(--text-sec); margin-top: 4px; }
+
+    /* ── SCROLL HINT ── */
+    .scroll-hint {
+      display: inline-flex; margin-top: 40px;
+      color: var(--text-sec); opacity: 0.5;
+      animation: bounce 2s infinite;
+      transition: opacity 0.2s;
+    }
+    .scroll-hint:hover { opacity: 1; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    /* ── SECTIONS ── */
+    .section { max-width: var(--max-w); margin: 0 auto; padding: 80px 24px; }
+    .section-header { text-align: center; margin-bottom: 56px; }
+    .section-label {
+      font-size: 13px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--accent); margin-bottom: 12px;
+    }
+    .section-header h2 {
+      font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+      letter-spacing: -0.02em; margin-bottom: 16px;
+    }
+    .section-header p { font-size: 16px; color: var(--text-sec); max-width: 560px; margin: 0 auto; }
+
+    .divider {
+      border: none; border-top: 1px solid var(--border);
+      max-width: var(--max-w); margin: 0 auto;
+    }
+
+    /* ── BENTO ── */
+    .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .bento-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; transition: border-color 0.2s, transform 0.2s;
+    }
+    .bento-card:hover { border-color: var(--text-sec); transform: translateY(-2px); }
+    .bento-card.span-2 { grid-column: span 2; }
+    .bento-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .icon-green  { background: rgba(45,161,96,0.15); color: var(--green); }
+    .icon-blue   { background: rgba(66,143,220,0.15); color: var(--blue); }
+    .icon-orange { background: rgba(252,163,38,0.15); color: var(--orange); }
+    .icon-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+    .icon-cyan   { background: rgba(6,182,212,0.15); color: var(--cyan); }
+    .icon-red    { background: rgba(236,89,65,0.15); color: var(--red); }
+    .bento-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .bento-card p { font-size: 14px; color: var(--text-sec); line-height: 1.6; }
+    .bento-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    .bento-tag {
+      font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 6px;
+      background: rgba(248,250,252,0.06); color: var(--text-sec); border: 1px solid var(--border);
+    }
+
+    /* ── FEATURE LIST ── */
+    .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .feature-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .feature-item:hover { border-color: var(--text-sec); }
+    .feature-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+    }
+    .feature-item h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .feature-item p { font-size: 13px; color: var(--text-sec); line-height: 1.5; }
+
+    /* ── STEPS ── */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .step { text-align: center; padding: 32px 20px; }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: #fff;
+      font-size: 18px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--text-sec); line-height: 1.6; }
+
+    /* ── CTA ── */
+    .cta-section { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 100px; }
+    .cta-banner {
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(34,197,94,0.08) 100%);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 60px 40px; text-align: center;
+    }
+    .cta-banner h2 { font-size: clamp(24px, 3.5vw, 36px); font-weight: 700; margin-bottom: 16px; }
+    .cta-banner p { font-size: 16px; color: var(--text-sec); max-width: 480px; margin: 0 auto 32px; }
+
+    /* ── FOOTER ── */
+    .footer {
+      border-top: 1px solid var(--border); padding: 32px 24px;
+      text-align: center; font-size: 13px; color: var(--text-sec);
+    }
+    .footer a { color: var(--text-sec); transition: color 0.15s; }
+    .footer a:hover { color: var(--text); }
+    .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 12px; }
+
+    /* ── SCREENSHOTS ── */
+    .screenshots {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+    }
+    .screenshots.single-row { grid-template-columns: 1fr; max-width: 800px; margin: 0 auto; }
+    .screenshot-card {
+      border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--border); background: var(--surface);
+      transition: border-color 0.2s, transform 0.2s; cursor: pointer;
+    }
+    .screenshot-card:hover { border-color: var(--text-sec); transform: translateY(-2px); }
+    .screenshot-card img {
+      width: 100%; height: auto; display: block;
+    }
+    .screenshot-caption {
+      padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--text-sec);
+      text-align: center;
+    }
+    .screenshot-empty {
+      text-align: center; padding: 40px 20px; color: var(--text-sec); font-size: 14px;
+      background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius);
+    }
+    .screenshot-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 200;
+      background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .screenshot-overlay.active { opacity: 1; pointer-events: auto; }
+    .screenshot-overlay img {
+      max-width: 90vw; max-height: 90vh; border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* ── CHANGELOG ── */
+    .changelog { max-width: 720px; margin: 0 auto; }
+    .changelog-version {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 16px; overflow: hidden;
+    }
+    .changelog-version-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; transition: background 0.15s;
+    }
+    .changelog-version-header:hover { background: var(--surface-hover); }
+    .changelog-version-header h3 { font-size: 18px; font-weight: 700; }
+    .changelog-version-tag {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 4px;
+      background: var(--accent-glow); color: var(--accent);
+    }
+    .changelog-version-tag.old { background: rgba(148,163,184,0.1); color: var(--text-sec); }
+    .changelog-arrow {
+      font-size: 14px; color: var(--text-sec); transition: transform 0.2s;
+    }
+    .changelog-version.open .changelog-arrow { transform: rotate(180deg); }
+    .changelog-version-body {
+      display: none; padding: 0 20px 16px;
+    }
+    .changelog-version.open .changelog-version-body { display: block; }
+    .changelog-section-title {
+      font-size: 13px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--accent); margin: 12px 0 8px;
+    }
+    .changelog-section-title.tech { color: var(--text-sec); }
+    .changelog-item {
+      font-size: 14px; color: var(--text-sec); line-height: 1.6;
+      padding: 4px 0 4px 16px; position: relative;
+    }
+    .changelog-item::before {
+      content: ''; position: absolute; left: 0; top: 12px;
+      width: 6px; height: 6px; border-radius: 50%; background: var(--border);
+    }
+    .changelog-item strong { color: var(--text); font-weight: 600; }
+    .changelog-loading {
+      text-align: center; padding: 40px; color: var(--text-sec); font-size: 14px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .bento, .feature-grid { grid-template-columns: 1fr; }
+      .bento-card.span-2 { grid-column: span 1; }
+      .steps { grid-template-columns: 1fr; }
+      .hero-stats { gap: 24px; }
+      .nav-right a.nav-hide-mobile { display: none; }
+      .screenshots { grid-template-columns: 1fr; }
+      .cta-banner { padding: 40px 24px; }
+    }
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction: column; align-items: center; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+      .hero-stats { flex-direction: column; gap: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" role="navigation" aria-label="Main">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand" aria-label="GitLab Actions Home">
+        <img src="icon.png" alt="GitLab Actions" width="28" height="28" style="border-radius:6px">
+        GitLab Actions
+      </a>
+      <div class="nav-right">
+        <a href="#features" class="nav-hide-mobile" data-i18n="navFeatures">Features</a>
+        <a href="#jira" class="nav-hide-mobile" data-i18n="navJira">Jira</a>
+        <a href="#how-it-works" class="nav-hide-mobile" data-i18n="navHow">How it works</a>
+        <a href="https://github.com/termyanen/gitlab-actions" target="_blank" class="nav-hide-mobile">GitHub</a>
+        <span class="lang-switch" id="langToggle" role="button" tabindex="0" aria-label="Switch language">RU</span>
+        <a href="https://chromewebstore.google.com/detail/gitlab-mr-actions/lbploihmpffiihpgeojdlpcclegbdeak" class="btn-nav" target="_blank" data-i18n="navInstall">Install</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      <span data-i18n-html="heroBadge">Free Chrome Extension &middot; Open Source &middot; 7 Languages</span>
+    </div>
+    <h1 data-i18n-html="heroTitle">Automate the routine in <span>GitLab</span></h1>
+    <p class="hero-sub" data-i18n="heroSub">Rebase, bump version, auto-merge, manage CI jobs, and track Jira tickets &mdash; all without leaving the merge request page. Works with any self-hosted GitLab. No API tokens needed.</p>
+    <div class="hero-actions">
+      <a href="https://chromewebstore.google.com/detail/gitlab-mr-actions/lbploihmpffiihpgeojdlpcclegbdeak" class="btn-primary" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M8 6.5v7l6-3.5-6-3.5z" fill="currentColor"/></svg>
+        <span data-i18n="ctaInstall">Install Free from Chrome Web Store</span>
+      </a>
+      <a href="https://github.com/termyanen/gitlab-actions" class="btn-secondary" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"/></svg>
+        <span data-i18n="ctaGithub">Star on GitHub</span>
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value">5 <small data-i18n="statSec">sec</small></div>
+        <div class="hero-stat-label" data-i18n="statShip">to ship a merge request</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">10x</div>
+        <div class="hero-stat-label" data-i18n="statClicks">fewer clicks per MR</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">0</div>
+        <div class="hero-stat-label" data-i18n="statTokens">tokens or setup needed</div>
+      </div>
+    </div>
+    <a href="#features" class="scroll-hint" aria-label="Scroll down">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </header>
+
+  <!-- MR DETAIL FEATURES -->
+  <section class="section" id="features" style="padding-top:40px">
+    <div class="section-header">
+      <div class="section-label" data-i18n="secMrLabel">MR Detail Page</div>
+      <h2 data-i18n="secMrTitle">14 action buttons, one click each</h2>
+      <p data-i18n="secMrSub">Every common merge request operation - from rebase to full release - available directly on the MR page.</p>
+    </div>
+    <div class="bento">
+      <!-- Ship -->
+      <div class="bento-card span-2">
+        <div class="bento-icon icon-green">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10L8 14L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 data-i18n="fShipTitle">Ship in One Click</h3>
+        <p data-i18n="fShipDesc">Rebase, bump version, and enable auto-merge &mdash; the entire release flow in a single button. Also available: Force Ship for immediate merge bypassing pipeline wait.</p>
+        <div class="bento-tags">
+          <span class="bento-tag">Rebase</span>
+          <span class="bento-tag">Version Bump</span>
+          <span class="bento-tag">Auto-merge</span>
+          <span class="bento-tag">Ship</span>
+          <span class="bento-tag">Force Ship</span>
+          <span class="bento-tag">Rebase + Version</span>
+          <span class="bento-tag">Rebase + Auto-merge</span>
+          <span class="bento-tag">Rebase + Force</span>
+        </div>
+      </div>
+      <!-- CI -->
+      <div class="bento-card">
+        <div class="bento-icon icon-orange">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2v4M10 14v4M4.93 4.93l2.83 2.83M12.24 12.24l2.83 2.83M2 10h4M14 10h4M4.93 15.07l2.83-2.83M12.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fCiTitle">CI/CD Pipeline Control</h3>
+        <p data-i18n="fCiDesc">New pipeline, cancel running, retry all failed jobs, trigger custom manual jobs &mdash; manage your CI without navigating away from the MR.</p>
+      </div>
+      <!-- Version bump -->
+      <div class="bento-card">
+        <div class="bento-icon icon-cyan">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M6 7l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 data-i18n="fVersionTitle">Smart Version Bump</h3>
+        <p data-i18n="fVersionDesc">Automatic version increment for package.json, pyproject.toml, version.txt, or any custom file. Configurable JSON path, strategy (patch/minor/major), and commit message template.</p>
+      </div>
+      <!-- Reviewers -->
+      <div class="bento-card">
+        <div class="bento-icon icon-purple">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="14" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M3 17c0-2.2 1.8-4 4-4h6c2.2 0 4 1.8 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fReviewTitle">Quick Reviewers</h3>
+        <p data-i18n="fReviewDesc">Set merge request reviewers from a preconfigured list in one click. No need to search for usernames each time.</p>
+      </div>
+      <!-- Draft + Copy -->
+      <div class="bento-card">
+        <div class="bento-icon icon-blue">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 7h6M7 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fDraftTitle">Draft Toggle &amp; Copy MR</h3>
+        <p data-i18n="fDraftDesc">Mark or unmark MR as draft instantly. Copy MR title and link to clipboard for sharing in messengers and task trackers.</p>
+      </div>
+      <!-- Customizable -->
+      <div class="bento-card">
+        <div class="bento-icon icon-green">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fCustomTitle">Fully Customizable</h3>
+        <p data-i18n="fCustomDesc">Drag &amp; drop button order, per-project profiles with separate settings, custom CI job buttons. Configure everything from the extension popup.</p>
+      </div>
+      <!-- Background tracker -->
+      <div class="bento-card span-2">
+        <div class="bento-icon icon-red">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 9h8M6 12h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fTrackerTitle">Background Job Tracker</h3>
+        <p data-i18n="fTrackerDesc">Long-running operations (Ship, Rebase + Auto-merge) run in the background service worker. A floating tracker panel shows real-time progress with step-by-step visualization and cancel support. Works across all GitLab tabs.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- MR LIST FEATURES -->
+  <section class="section" id="mr-list">
+    <div class="section-header">
+      <div class="section-label" data-i18n="secListLabel">MR List Page</div>
+      <h2 data-i18n="secListTitle">Smarter merge request list</h2>
+      <p data-i18n="secListSub">Enhancements that help you find, filter, and manage merge requests faster.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--green)"></div>
+        <div>
+          <h4 data-i18n="fFilterTitle">"Only Mine" &amp; "Needs Review" Filters</h4>
+          <p data-i18n="fFilterDesc">One-click toggle buttons to filter merge requests by author or reviewer. Instantly see what needs your attention.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--blue)"></div>
+        <div>
+          <h4 data-i18n="fDimTitle">Dim Drafts &amp; Highlight Own MRs</h4>
+          <p data-i18n="fDimDesc">Draft MRs are visually dimmed. Your own MRs get a blue left border for instant recognition.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--purple)"></div>
+        <div>
+          <h4 data-i18n="fReviewerTitle">"Your Review" Badge</h4>
+          <p data-i18n="fReviewerDesc">Scans MR comments for reviewer assignments. Shows a badge when you are mentioned as a reviewer. Cached for 5 minutes.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--orange)"></div>
+        <div>
+          <h4 data-i18n="fCopyListTitle">Copy MR from List</h4>
+          <p data-i18n="fCopyListDesc">Copy button on each MR in the list. Copies title and link to clipboard without opening the merge request.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--cyan)"></div>
+        <div>
+          <h4 data-i18n="fAgeTitle">MR Age Badge</h4>
+          <p data-i18n="fAgeDesc">Shows time elapsed since the MR was created. Quickly spot stale merge requests that need attention.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--red)"></div>
+        <div>
+          <h4 data-i18n="fConfirmTitle">Skip Confirmations</h4>
+          <p data-i18n="fConfirmDesc">Optional setting to disable all confirmation dialogs for one-click workflow. For experienced users who prefer speed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- JIRA SECTION -->
+  <section class="section" id="jira">
+    <div class="section-header">
+      <div class="section-label" data-i18n="secJiraLabel">Jira Integration</div>
+      <h2 data-i18n="secJiraTitle">Jira context without leaving GitLab</h2>
+      <p data-i18n="secJiraSub">See ticket status, change assignee, transition workflows &mdash; all from the merge request page. Uses session cookies, no API tokens.</p>
+    </div>
+    <div class="bento">
+      <div class="bento-card span-2">
+        <div class="bento-icon icon-blue">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M6 6h8M6 10h5M6 14h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fSidebarTitle">Full Ticket Sidebar</h3>
+        <p data-i18n="fSidebarDesc">Click any Jira badge to open a detailed sidebar: summary, status, resolution, type, priority, assignee, reporter, labels, epic link, sprint, components, versions, fix versions, dates, and description with rendered wiki markup. Attachments with image/video lightbox.</p>
+      </div>
+      <div class="bento-card">
+        <div class="bento-icon icon-green">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10L8 14L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 data-i18n="fBadgesTitle">Status Badges</h3>
+        <p data-i18n="fBadgesDesc">Color-coded Jira status badges on MR list and detail pages. Parses ticket IDs from MR titles via configurable regex. Green for Done, blue for In Progress, yellow for In Review.</p>
+      </div>
+      <div class="bento-card">
+        <div class="bento-icon icon-orange">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3l2 4h5l-4 3 1.5 5L10 12.5 5.5 15 7 10 3 7h5l2-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 data-i18n="fIconsTitle">Type &amp; Priority Icons</h3>
+        <p data-i18n="fIconsDesc">Native Jira icons for issue type and priority displayed next to status badges. Enable in settings for additional context at a glance.</p>
+      </div>
+      <div class="bento-card">
+        <div class="bento-icon icon-purple">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M10 5v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fTransTitle">Change Status &amp; Assignee</h3>
+        <p data-i18n="fTransDesc">Transition buttons show only available workflow actions. Change ticket status without leaving GitLab. Click assignee to search and reassign with autocomplete.</p>
+      </div>
+      <div class="bento-card">
+        <div class="bento-icon icon-cyan">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 4l6 6M14 4l-6 6M4 16l6-6M14 16l-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fQuickTitle">Quick Actions</h3>
+        <p data-i18n="fQuickDesc">Configure composite actions: change status + assign user in one click. Buttons appear in sidebar only when the target transition is available.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="section-header">
+      <div class="section-label" data-i18n="secHowLabel">How it works</div>
+      <h2 data-i18n="secHowTitle">Up and running in 30 seconds</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3 data-i18n="step1Title">Install the Extension</h3>
+        <p data-i18n="step1Desc">Add from Chrome Web Store with one click. No API tokens, no configuration files, no admin access required.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3 data-i18n="step2Title">Open Any Merge Request</h3>
+        <p data-i18n="step2Desc">Navigate to any MR on your self-hosted GitLab instance. Action buttons appear automatically above the MR description.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3 data-i18n="step3Title">Click and Ship</h3>
+        <p data-i18n="step3Desc">Rebase, bump version, and enable auto-merge &mdash; all in one click. Background tracker shows progress in real time.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- SCREENSHOTS -->
+  <section class="section" id="screenshots">
+    <div class="section-header">
+      <div class="section-label" data-i18n="secScreenLabel">Screenshots</div>
+      <h2 data-i18n="secScreenTitle">See it in action</h2>
+    </div>
+    <div class="screenshots" id="screenshotGallery"></div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- CHANGELOG -->
+  <section class="section" id="changelog">
+    <div class="section-header">
+      <div class="section-label" data-i18n="secChangeLabel">Changelog</div>
+      <h2 data-i18n="secChangeTitle">What's new</h2>
+    </div>
+    <div class="changelog" id="changelogContent">
+      <div class="changelog-loading" data-i18n="changelogLoading">Loading changelog...</div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-banner">
+      <h2 data-i18n="ctaTitle">Stop clicking through GitLab UI</h2>
+      <p data-i18n="ctaSub">Join developers who save time on every merge request. Free, open source, privacy-first. No data leaves your browser.</p>
+      <div class="hero-actions">
+        <a href="https://chromewebstore.google.com/detail/gitlab-mr-actions/lbploihmpffiihpgeojdlpcclegbdeak" class="btn-primary" target="_blank">
+          <span data-i18n="ctaInstallBottom">Install Free Extension</span>
+        </a>
+        <a href="https://github.com/termyanen/gitlab-actions" class="btn-secondary" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"/></svg>
+          <span data-i18n="ctaGithub">Star on GitHub</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://github.com/termyanen/gitlab-actions" target="_blank">GitHub</a>
+      <a href="https://chromewebstore.google.com/detail/gitlab-mr-actions/lbploihmpffiihpgeojdlpcclegbdeak" target="_blank">Chrome Web Store</a>
+      <a href="https://github.com/termyanen/gitlab-actions/blob/main/PRIVACY_POLICY.md" target="_blank" data-i18n="footerPrivacy">Privacy Policy</a>
+    </div>
+    <p>Built by <a href="https://github.com/termyanen" target="_blank">Roman Termyanen</a>. Open source under MIT License.</p>
+  </footer>
+
+  <script>
+    var LANG = {
+      en: {
+        navFeatures: 'Features', navJira: 'Jira', navHow: 'How it works', navInstall: 'Install',
+        heroBadge: 'Free Chrome Extension &middot; Open Source &middot; 7 Languages',
+        heroTitle: 'Automate the routine in <span>GitLab</span>',
+        heroSub: 'Rebase, bump version, auto-merge, manage CI jobs, and track Jira tickets \u2014 all without leaving the merge request page. Works with any self-hosted GitLab. No API tokens needed.',
+        ctaInstall: 'Install Free from Chrome Web Store', ctaGithub: 'Star on GitHub',
+        statSec: 'sec', statShip: 'to ship a merge request', statClicks: 'fewer clicks per MR', statTokens: 'tokens or setup needed',
+
+        secMrLabel: 'MR Detail Page', secMrTitle: '14 action buttons, one click each',
+        secMrSub: 'Every common merge request operation \u2014 from rebase to full release \u2014 available directly on the MR page.',
+        fShipTitle: 'Ship in One Click',
+        fShipDesc: 'Rebase, bump version, and enable auto-merge \u2014 the entire release flow in a single button. Also available: Force Ship for immediate merge bypassing pipeline wait.',
+        fCiTitle: 'CI/CD Pipeline Control',
+        fCiDesc: 'New pipeline, cancel running, retry all failed jobs, trigger custom manual jobs \u2014 manage your CI without navigating away from the MR.',
+        fVersionTitle: 'Smart Version Bump',
+        fVersionDesc: 'Automatic version increment for package.json, pyproject.toml, version.txt, or any custom file. Configurable JSON path, strategy (patch/minor/major), and commit message template.',
+        fReviewTitle: 'Quick Reviewers',
+        fReviewDesc: 'Set merge request reviewers from a preconfigured list in one click. No need to search for usernames each time.',
+        fDraftTitle: 'Draft Toggle & Copy MR',
+        fDraftDesc: 'Mark or unmark MR as draft instantly. Copy MR title and link to clipboard for sharing in messengers and task trackers.',
+        fCustomTitle: 'Fully Customizable',
+        fCustomDesc: 'Drag & drop button order, per-project profiles with separate settings, custom CI job buttons. Configure everything from the extension popup.',
+        fTrackerTitle: 'Background Job Tracker',
+        fTrackerDesc: 'Long-running operations (Ship, Rebase + Auto-merge) run in the background service worker. A floating tracker panel shows real-time progress with step-by-step visualization and cancel support. Works across all GitLab tabs.',
+
+        secListLabel: 'MR List Page', secListTitle: 'Smarter merge request list',
+        secListSub: 'Enhancements that help you find, filter, and manage merge requests faster.',
+        fFilterTitle: '"Only Mine" & "Needs Review" Filters',
+        fFilterDesc: 'One-click toggle buttons to filter merge requests by author or reviewer. Instantly see what needs your attention.',
+        fDimTitle: 'Dim Drafts & Highlight Own MRs',
+        fDimDesc: 'Draft MRs are visually dimmed. Your own MRs get a blue left border for instant recognition.',
+        fReviewerTitle: '"Your Review" Badge',
+        fReviewerDesc: 'Scans MR comments for reviewer assignments. Shows a badge when you are mentioned as a reviewer. Cached for 5 minutes.',
+        fCopyListTitle: 'Copy MR from List',
+        fCopyListDesc: 'Copy button on each MR in the list. Copies title and link to clipboard without opening the merge request.',
+        fAgeTitle: 'MR Age Badge',
+        fAgeDesc: 'Shows time elapsed since the MR was created. Quickly spot stale merge requests that need attention.',
+        fConfirmTitle: 'Skip Confirmations',
+        fConfirmDesc: 'Optional setting to disable all confirmation dialogs for one-click workflow. For experienced users who prefer speed.',
+
+        secJiraLabel: 'Jira Integration', secJiraTitle: 'Jira context without leaving GitLab',
+        secJiraSub: 'See ticket status, change assignee, transition workflows \u2014 all from the merge request page. Uses session cookies, no API tokens.',
+        fSidebarTitle: 'Full Ticket Sidebar',
+        fSidebarDesc: 'Click any Jira badge to open a detailed sidebar: summary, status, resolution, type, priority, assignee, reporter, labels, epic link, sprint, components, versions, fix versions, dates, and description with rendered wiki markup. Attachments with image/video lightbox.',
+        fBadgesTitle: 'Status Badges',
+        fBadgesDesc: 'Color-coded Jira status badges on MR list and detail pages. Parses ticket IDs from MR titles via configurable regex. Green for Done, blue for In Progress, yellow for In Review.',
+        fIconsTitle: 'Type & Priority Icons',
+        fIconsDesc: 'Native Jira icons for issue type and priority displayed next to status badges. Enable in settings for additional context at a glance.',
+        fTransTitle: 'Change Status & Assignee',
+        fTransDesc: 'Transition buttons show only available workflow actions. Change ticket status without leaving GitLab. Click assignee to search and reassign with autocomplete.',
+        fQuickTitle: 'Quick Actions',
+        fQuickDesc: 'Configure composite actions: change status + assign user in one click. Buttons appear in sidebar only when the target transition is available.',
+        fEpicTitle: 'Epic Link & Sprint',
+        fEpicDesc: 'Clickable epic link opens directly in Jira. Sprint field shows current sprint name. Custom fields discovered automatically per Jira instance.',
+
+        secHowLabel: 'How it works', secHowTitle: 'Up and running in 30 seconds',
+        step1Title: 'Install the Extension',
+        step1Desc: 'Add from Chrome Web Store with one click. No API tokens, no configuration files, no admin access required.',
+        step2Title: 'Open Any Merge Request',
+        step2Desc: 'Navigate to any MR on your self-hosted GitLab instance. Action buttons appear automatically above the MR description.',
+        step3Title: 'Click and Ship',
+        step3Desc: 'Rebase, bump version, and enable auto-merge \u2014 all in one click. Background tracker shows progress in real time.',
+
+        secScreenLabel: 'Screenshots', secScreenTitle: 'See it in action',
+        secChangeLabel: 'Changelog', secChangeTitle: "What's new",
+        changelogLoading: 'Loading changelog...',
+        changelogFeatures: 'New features', changelogTechnical: 'Technical', changelogImprovements: 'Improvements',
+
+        ctaTitle: 'Stop clicking through GitLab UI',
+        ctaSub: 'Join developers who save time on every merge request. Free, open source, privacy-first. No data leaves your browser.',
+        ctaInstallBottom: 'Install Free Extension',
+        footerPrivacy: 'Privacy Policy'
+      },
+      ru: {
+        navFeatures: 'Возможности', navJira: 'Jira', navHow: 'Как работает', navInstall: 'Установить',
+        heroBadge: 'Бесплатное расширение для Chrome &middot; Open Source &middot; 7 языков',
+        heroTitle: 'Автоматизируйте рутину в <span>GitLab</span>',
+        heroSub: 'Rebase, версия, auto-merge, CI-джобы и Jira \u2014 всё прямо на странице merge request. Работает с любым self-hosted GitLab. Без токенов.',
+        ctaInstall: 'Установить из Chrome Web Store', ctaGithub: 'GitHub',
+        statSec: 'сек', statShip: 'на отправку merge request', statClicks: 'меньше кликов на MR', statTokens: 'токенов и настроек',
+
+        secMrLabel: 'Страница MR', secMrTitle: '14 кнопок действий, каждая в один клик',
+        secMrSub: 'Все типичные операции с merge request \u2014 от rebase до полного релиза \u2014 доступны прямо на странице MR.',
+        fShipTitle: 'Ship одной кнопкой',
+        fShipDesc: 'Rebase, поднятие версии и auto-merge \u2014 весь процесс релиза в одном клике. Также доступен Force Ship для немедленного мержа без ожидания пайплайна.',
+        fCiTitle: 'Управление CI/CD',
+        fCiDesc: 'Новый пайплайн, отмена запущенного, перезапуск упавших джобов, запуск кастомных ручных джобов \u2014 всё без перехода на другие страницы.',
+        fVersionTitle: 'Умный Version Bump',
+        fVersionDesc: 'Автоматическое поднятие версии в package.json, pyproject.toml, version.txt или любом другом файле. Настраиваемый путь, стратегия (patch/minor/major) и шаблон коммита.',
+        fReviewTitle: 'Быстрые ревьюеры',
+        fReviewDesc: 'Назначение ревьюеров из предварительно настроенного списка в один клик. Не нужно каждый раз искать юзернеймы.',
+        fDraftTitle: 'Draft Toggle и Copy MR',
+        fDraftDesc: 'Мгновенная отметка MR как черновика. Копирование заголовка и ссылки MR в буфер обмена для отправки в мессенджеры и трекеры задач.',
+        fCustomTitle: 'Полная настройка',
+        fCustomDesc: 'Drag & drop порядок кнопок, профили по проектам с отдельными настройками, кастомные CI-джобы. Всё настраивается из попапа расширения.',
+        fTrackerTitle: 'Трекер фоновых задач',
+        fTrackerDesc: 'Долгие операции (Ship, Rebase + Auto-merge) выполняются в фоновом service worker. Плавающая панель показывает прогресс в реальном времени с визуализацией шагов и кнопкой отмены. Работает на всех вкладках GitLab.',
+
+        secListLabel: 'Список MR', secListTitle: 'Улучшенный список merge requests',
+        secListSub: 'Фичи, которые помогают быстрее находить, фильтровать и управлять merge requests.',
+        fFilterTitle: 'Фильтры "Только мои" и "На моё ревью"',
+        fFilterDesc: 'Кнопки-переключатели для фильтрации MR по автору или ревьюеру. Мгновенно видно, что требует вашего внимания.',
+        fDimTitle: 'Затемнение черновиков и подсветка своих MR',
+        fDimDesc: 'Черновые MR визуально приглушены. Ваши собственные MR выделены синей полоской слева.',
+        fReviewerTitle: 'Бейдж "Ваше ревью"',
+        fReviewerDesc: 'Сканирует комментарии MR на назначение ревьюеров. Показывает бейдж, когда вы упомянуты как ревьюер. Кэш 5 минут.',
+        fCopyListTitle: 'Копирование MR из списка',
+        fCopyListDesc: 'Кнопка копирования на каждом MR в списке. Копирует заголовок и ссылку в буфер без открытия merge request.',
+        fAgeTitle: 'Возраст MR',
+        fAgeDesc: 'Показывает время с момента создания MR. Быстро находите застоявшиеся merge requests.',
+        fConfirmTitle: 'Пропуск подтверждений',
+        fConfirmDesc: 'Опциональная настройка отключения всех диалогов подтверждения. Для опытных пользователей, которые ценят скорость.',
+
+        secJiraLabel: 'Интеграция с Jira', secJiraTitle: 'Контекст Jira без выхода из GitLab',
+        secJiraSub: 'Статусы тикетов, смена ответственного, переходы по воркфлоу \u2014 всё со страницы merge request. Через session cookies, без API-токенов.',
+        fSidebarTitle: 'Полный сайдбар тикета',
+        fSidebarDesc: 'Клик по любому Jira-бейджу открывает сайдбар: тема, статус, резолюция, тип, приоритет, исполнитель, автор, метки, эпик, спринт, компоненты, версии, даты и описание с рендером wiki-разметки. Вложения с лайтбоксом для картинок и видео.',
+        fBadgesTitle: 'Статусные бейджи',
+        fBadgesDesc: 'Цветные бейджи статусов Jira на списке и странице MR. Парсит ID тикетов из заголовков MR через настраиваемое регулярное выражение.',
+        fIconsTitle: 'Иконки типа и приоритета',
+        fIconsDesc: 'Нативные иконки Jira для типа задачи и приоритета рядом со статусными бейджами. Включается в настройках.',
+        fTransTitle: 'Смена статуса и исполнителя',
+        fTransDesc: 'Кнопки переходов показывают только доступные действия воркфлоу. Смена статуса тикета без выхода из GitLab. Поиск и переназначение исполнителя с автокомплитом.',
+        fQuickTitle: 'Быстрые действия',
+        fQuickDesc: 'Настраиваемые составные действия: смена статуса + назначение исполнителя в один клик. Кнопки появляются только когда целевой переход доступен.',
+        fEpicTitle: 'Эпик и Спринт',
+        fEpicDesc: 'Кликабельная ссылка на эпик открывается в Jira. Поле спринта показывает текущий спринт. Кастомные поля определяются автоматически для каждого экземпляра Jira.',
+
+        secHowLabel: 'Как это работает', secHowTitle: 'Готово за 30 секунд',
+        step1Title: 'Установите расширение',
+        step1Desc: 'Один клик в Chrome Web Store. Без токенов, конфигов и админского доступа.',
+        step2Title: 'Откройте любой Merge Request',
+        step2Desc: 'Перейдите на любой MR в вашем self-hosted GitLab. Кнопки действий появятся автоматически.',
+        step3Title: 'Кликните и отправляйте',
+        step3Desc: 'Rebase, поднятие версии и auto-merge \u2014 всё в одном клике. Фоновый трекер показывает прогресс.',
+
+        secScreenLabel: 'Скриншоты', secScreenTitle: 'Как это выглядит',
+        secChangeLabel: 'Изменения', secChangeTitle: 'Что нового',
+        changelogLoading: 'Загрузка...',
+        changelogFeatures: 'Новые возможности', changelogTechnical: 'Техническое', changelogImprovements: 'Улучшения',
+
+        ctaTitle: 'Хватит кликать по GitLab UI',
+        ctaSub: 'Присоединяйтесь к разработчикам, которые экономят время на каждом merge request. Бесплатно, open source, приватно.',
+        ctaInstallBottom: 'Установить бесплатно',
+        footerPrivacy: 'Политика конфиденциальности'
+      }
+    };
+
+    var currentLang = (navigator.language || '').startsWith('ru') ? 'ru' : 'en';
+
+    function applyLang(lang) {
+      currentLang = lang;
+      var strings = LANG[lang];
+      document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+      document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n');
+        if (strings[key] !== undefined) el.textContent = strings[key];
+      });
+      document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n-html');
+        if (strings[key] !== undefined) el.innerHTML = strings[key];
+      });
+      var toggle = document.getElementById('langToggle');
+      if (toggle) toggle.textContent = lang === 'en' ? 'RU' : 'EN';
+    }
+
+    document.getElementById('langToggle').addEventListener('click', function() {
+      applyLang(currentLang === 'en' ? 'ru' : 'en');
+    });
+    document.getElementById('langToggle').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        applyLang(currentLang === 'en' ? 'ru' : 'en');
+      }
+    });
+
+    applyLang(currentLang);
+
+    // ── SCREENSHOTS ──
+    var SCREENSHOTS = [
+      { file: 'screenshots/1-mr-buttons-and-jira-badges.png', en: 'Action buttons and Jira badges on MR page', ru: 'Кнопки действий и Jira-бейджи на странице MR' },
+      { file: 'screenshots/2-jira-badges-and-sidebar.png', en: 'Jira badges on MR list and ticket sidebar', ru: 'Jira-бейджи в списке MR и сайдбар тикета' },
+      { file: 'screenshots/3-settings.png', en: 'Extension settings popup', ru: 'Попап с настройками расширения' },
+      { file: 'screenshots/4-tracker.png', en: 'Background job tracker panel', ru: 'Панель трекера фоновых задач' }
+    ];
+
+    var screenshotOverlay = document.createElement('div');
+    screenshotOverlay.className = 'screenshot-overlay';
+    screenshotOverlay.innerHTML = '<img src="" alt="">';
+    document.body.appendChild(screenshotOverlay);
+    screenshotOverlay.addEventListener('click', function() {
+      screenshotOverlay.classList.remove('active');
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') screenshotOverlay.classList.remove('active');
+    });
+
+    function renderScreenshots() {
+      var gallery = document.getElementById('screenshotGallery');
+      if (!gallery) return;
+      gallery.innerHTML = '';
+      var loaded = [];
+      var total = SCREENSHOTS.length;
+      var checked = 0;
+      SCREENSHOTS.forEach(function(s) {
+        var img = new Image();
+        img.src = s.file;
+        img.onload = function() {
+          loaded.push(s);
+          checked++;
+          if (checked === total) buildGallery();
+        };
+        img.onerror = function() {
+          checked++;
+          if (checked === total) buildGallery();
+        };
+      });
+
+      function buildGallery() {
+        gallery.innerHTML = '';
+        var items = loaded.length ? loaded : [];
+        if (!items.length) {
+          var section = document.getElementById('screenshots');
+          if (section) section.style.display = 'none';
+          var prevDivider = section && section.previousElementSibling;
+          if (prevDivider && prevDivider.tagName === 'HR') prevDivider.style.display = 'none';
+          return;
+        }
+        if (items.length === 1) gallery.classList.add('single-row');
+        items.forEach(function(s) {
+          var card = document.createElement('div');
+          card.className = 'screenshot-card';
+          card.innerHTML = '<img src="' + s.file + '" alt="' + s.en + '" loading="lazy">' +
+            '<div class="screenshot-caption" data-screenshot-caption="' + s.file + '">' + (currentLang === 'ru' ? s.ru : s.en) + '</div>';
+          card.addEventListener('click', function() {
+            screenshotOverlay.querySelector('img').src = s.file;
+            screenshotOverlay.classList.add('active');
+          });
+          gallery.appendChild(card);
+        });
+      }
+    }
+    renderScreenshots();
+
+    // update screenshot captions on lang change
+    var origApplyLang = applyLang;
+    applyLang = function(lang) {
+      origApplyLang(lang);
+      SCREENSHOTS.forEach(function(s) {
+        var cap = document.querySelector('[data-screenshot-caption="' + s.file + '"]');
+        if (cap) cap.textContent = lang === 'ru' ? s.ru : s.en;
+      });
+    };
+
+    // ── CHANGELOG ──
+    function parseChangelog(md) {
+      var versions = [];
+      var current = null;
+      var currentSection = null;
+      md.split('\n').forEach(function(line) {
+        var vMatch = line.match(/^## (.+)/);
+        if (vMatch) {
+          current = { version: vMatch[1].trim(), sections: [] };
+          versions.push(current);
+          currentSection = null;
+          return;
+        }
+        var sMatch = line.match(/^### (.+)/);
+        if (sMatch && current) {
+          currentSection = { title: sMatch[1].trim(), items: [] };
+          current.sections.push(currentSection);
+          return;
+        }
+        var iMatch = line.match(/^- \*\*(.+?)\*\*(.+?)\s*[—–-]\s*(.+)/);
+        if (iMatch && currentSection) {
+          var extra = iMatch[2].trim();
+          currentSection.items.push({ bold: iMatch[1] + (extra ? ' ' + extra : ''), text: iMatch[3] });
+          return;
+        }
+        var plainMatch = line.match(/^- (.+)/);
+        if (plainMatch && currentSection) {
+          currentSection.items.push({ bold: '', text: plainMatch[1] });
+        }
+      });
+      return versions;
+    }
+
+    function renderChangelog(versions) {
+      var container = document.getElementById('changelogContent');
+      if (!container) return;
+      container.innerHTML = '';
+      var sectionNames = {
+        en: { 'New features': 'changelogFeatures', 'Technical': 'changelogTechnical', 'Improvements': 'changelogImprovements' },
+        ru: { 'New features': 'changelogFeatures', 'Technical': 'changelogTechnical', 'Improvements': 'changelogImprovements' }
+      };
+      versions.forEach(function(v, i) {
+        var div = document.createElement('div');
+        div.className = 'changelog-version' + (i === 0 ? ' open' : '');
+        var tagClass = i === 0 ? 'changelog-version-tag' : 'changelog-version-tag old';
+        var tagText = i === 0 ? 'Latest' : '';
+        var tagHtml = tagText ? '<span class="' + tagClass + '">' + tagText + '</span>' : '';
+        var headerHtml = '<div class="changelog-version-header">' +
+          '<h3>' + v.version + ' ' + tagHtml + '</h3>' +
+          '<span class="changelog-arrow">&#9660;</span></div>';
+        var bodyHtml = '<div class="changelog-version-body">';
+        v.sections.forEach(function(sec) {
+          var titleKey = sectionNames.en[sec.title] || '';
+          var isTech = sec.title === 'Technical' || sec.title === 'Improvements';
+          var localTitle = titleKey && LANG[currentLang][titleKey] ? LANG[currentLang][titleKey] : sec.title;
+          bodyHtml += '<div class="changelog-section-title' + (isTech ? ' tech' : '') + '">' + localTitle + '</div>';
+          sec.items.forEach(function(item) {
+            bodyHtml += '<div class="changelog-item">' +
+              (item.bold ? '<strong>' + item.bold + '</strong> \u2014 ' : '') +
+              item.text + '</div>';
+          });
+        });
+        bodyHtml += '</div>';
+        div.innerHTML = headerHtml + bodyHtml;
+        div.querySelector('.changelog-version-header').addEventListener('click', function() {
+          div.classList.toggle('open');
+        });
+        container.appendChild(div);
+      });
+    }
+
+    fetch('https://raw.githubusercontent.com/termyanen/gitlab-actions/main/CHANGELOG.md')
+      .then(function(r) { return r.ok ? r.text() : Promise.reject(); })
+      .then(function(md) { renderChangelog(parseChangelog(md)); })
+      .catch(function() {
+        var c = document.getElementById('changelogContent');
+        if (c) c.innerHTML = '<div class="changelog-loading">Could not load changelog. <a href="https://github.com/termyanen/gitlab-actions/blob/main/CHANGELOG.md" target="_blank" style="color:var(--accent)">View on GitHub</a></div>';
+      });
+  </script>
+</body>
+</html>
