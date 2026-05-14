@@ -1,0 +1,10 @@
+gitlab-mr-actions-v*.zip
+.DS_Store
+*.crx
+*.pem
+*.swp
+*.swo
+.idea/
+.vscode/
+node_modules/
+CLAUDE.md
