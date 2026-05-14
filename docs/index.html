@@ -88,6 +88,7 @@
     body {
       font-family: var(--font); background: var(--bg); color: var(--text);
       line-height: 1.6; -webkit-font-smoothing: antialiased;
+      max-width: 100vw; overflow-x: hidden;
     }
     a { color: inherit; text-decoration: none; }
 
@@ -260,7 +261,8 @@
 
     /* ── STEPS ── */
     .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .step { text-align: center; padding: 32px 20px; background: var(--surface); border-radius: 12px; min-width: 0; overflow: hidden; }
+    .step { text-align: center; padding: 32px 20px; background: var(--surface); border-radius: 12px; min-width: 0; }
+    .step p { font-size: 14px; color: var(--text-sec); line-height: 1.6; white-space: normal !important; word-break: break-word; }
     .step-num {
       width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: #fff;
       font-size: 18px; font-weight: 700;
@@ -268,7 +270,6 @@
       margin: 0 auto 16px;
     }
     .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-    .step p { font-size: 14px; color: var(--text-sec); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; }
 
     /* ── CTA ── */
     .cta-section { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 100px; }
