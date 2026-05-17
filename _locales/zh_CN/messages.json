@@ -260,5 +260,33 @@
   "cardNeedsReviewDesc": { "message": "一键切换 MR 列表，仅显示您被分配为审阅者的合并请求。" },
   "showCopyMr": { "message": "MR 列表中的复制按钮" },
   "cardCopyMrListTitle": { "message": "从列表复制 MR" },
-  "cardCopyMrListDesc": { "message": "在列表页每个 MR 旁添加复制按钮。一键复制 MR 标题和链接到剪贴板。" }
+  "cardCopyMrListDesc": { "message": "在列表页每个 MR 旁添加复制按钮。一键复制 MR 标题和链接到剪贴板。" },
+
+  "conflictsBadge": { "message": "冲突" },
+  "conflictsBadgeHint": { "message": "此合并请求存在需要解决的合并冲突" },
+  "cardConflictsTitle": { "message": "冲突指示器" },
+  "cardConflictsDesc": { "message": "当分支存在合并冲突时，在MR详情页显示红色CONFLICTS徽章。" },
+
+  "showThreadsBadge": { "message": "MR列表显示未解决讨论数" },
+  "showSizeBadge": { "message": "MR列表显示大小标签 (S/M/L/XL)" },
+  "showConflictsBadge": { "message": "在MR列表中显示冲突指示器" },
+  "cardThreadsTitle": { "message": "未解决讨论数" },
+  "cardThreadsDesc": { "message": "在MR列表中每个MR上显示红色徽章，标注未解决的讨论线程数量。" },
+  "cardSizeTitle": { "message": "MR大小标签" },
+  "cardSizeDesc": { "message": "根据变更行数显示彩色大小徽章 (S/M/L/XL)。S: 1-50, M: 51-200, L: 201-500, XL: 500+。" },
+
+  "uiCustomization": { "message": "界面定制" },
+  "collapseBars": { "message": "折叠顶部导航栏按钮" },
+  "hideRightSidebar": { "message": "隐藏MR页面右侧边栏" },
+  "collapseTopBars": { "message": "切换顶部导航栏" },
+  "cardCollapseTitle": { "message": "折叠顶部导航栏" },
+  "cardCollapseDesc": { "message": "添加按钮来折叠/展开GitLab导航栏。节省空间，帮助专注于内容。" },
+  "cardHideSectionsTitle": { "message": "隐藏界面元素" },
+  "cardHideSectionsDesc": { "message": "隐藏MR页面的右侧边栏，获得全宽内容区域。" },
+
+  "quickComments": { "message": "快速评论" },
+  "quickCommentsHint": { "message": "一键按钮，即时向MR发送普通评论（非代码行内评论）。按钮显示在操作栏中。" },
+  "quickCommentsAdd": { "message": "添加评论" },
+  "cardQuickCommentsTitle": { "message": "快速评论" },
+  "cardQuickCommentsDesc": { "message": "MR页面上的可配置模板评论按钮。一键发送LGTM、需要修改或任何自定义评论。" }
 }

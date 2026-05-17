@@ -55,6 +55,10 @@
     .jqa-row { display: flex; gap: 6px; align-items: center; }
     .jqa-row + .jqa-row { margin-top: 4px; }
     .jqa-row input { flex: 1; }
+    .quick-comment-row { margin-top: 6px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; }
+    .quick-comment-row input { padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; box-sizing: border-box; width: 100%; }
+    .quick-comment-row .remove-btn { background: none; border: none; color: #d00; cursor: pointer; font-size: 16px; padding: 0 4px; margin: 0; width: auto; }
+    .quick-comment-row .remove-btn:hover { color: #a00; }
     .jqa-field { flex: 1; }
     .jqa-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
 
@@ -84,6 +88,9 @@
       .jira-quick-action { background: #252525; border-color: #444; }
       .jira-quick-action input { background: #2a2a2a; border-color: #444; color: #ddd; }
       .jira-quick-action input::placeholder { color: #666; }
+      .quick-comment-row { background: #252525; border-color: #444; }
+      .quick-comment-row input { background: #2a2a2a; border-color: #444; color: #ddd; }
+      .quick-comment-row input::placeholder { color: #666; }
       .jqa-label { color: #777; }
       button { background: #2d6cb4; }
       button:hover { background: #3a7fd4; }

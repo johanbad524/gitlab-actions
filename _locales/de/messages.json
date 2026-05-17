@@ -245,5 +245,33 @@
   "cardNeedsReviewDesc": { "message": "Ein-Klick-Umschalter zum Filtern der MR-Liste auf nur Merge Requests, bei denen Sie als Reviewer zugewiesen sind." },
   "showCopyMr": { "message": "Kopier-Button bei MR-Listeneintraegen" },
   "cardCopyMrListTitle": { "message": "MR aus Liste kopieren" },
-  "cardCopyMrListDesc": { "message": "Fuegt einen Kopier-Button zu jedem MR auf der Listenseite hinzu. Kopiert MR-Titel und Link mit einem Klick in die Zwischenablage." }
+  "cardCopyMrListDesc": { "message": "Fuegt einen Kopier-Button zu jedem MR auf der Listenseite hinzu. Kopiert MR-Titel und Link mit einem Klick in die Zwischenablage." },
+
+  "conflictsBadge": { "message": "Konflikte" },
+  "conflictsBadgeHint": { "message": "Dieser MR hat Merge-Konflikte, die gelöst werden müssen" },
+  "cardConflictsTitle": { "message": "Konfliktanzeige" },
+  "cardConflictsDesc": { "message": "Zeigt ein rotes KONFLIKTE-Badge auf der MR-Detailseite an, wenn der Branch Merge-Konflikte hat." },
+
+  "showThreadsBadge": { "message": "Ungelöste Diskussionen in MR-Liste anzeigen" },
+  "showSizeBadge": { "message": "MR-Größenlabels (S/M/L/XL) in Liste anzeigen" },
+  "showConflictsBadge": { "message": "Konfliktanzeige in MR-Liste anzeigen" },
+  "cardThreadsTitle": { "message": "Ungelöste Diskussionen" },
+  "cardThreadsDesc": { "message": "Zeigt ein rotes Badge mit der Anzahl ungelöster Diskussions-Threads bei jedem MR in der Liste." },
+  "cardSizeTitle": { "message": "MR-Größenlabels" },
+  "cardSizeDesc": { "message": "Farbkodierte Größen-Badges (S/M/L/XL) basierend auf geänderten Zeilen. S: 1-50, M: 51-200, L: 201-500, XL: 500+." },
+
+  "uiCustomization": { "message": "UI-Anpassung" },
+  "collapseBars": { "message": "Schaltfläche zum Einklappen der oberen Leisten" },
+  "hideRightSidebar": { "message": "Rechte Seitenleiste auf MR-Seiten ausblenden" },
+  "collapseTopBars": { "message": "Obere Leisten umschalten" },
+  "cardCollapseTitle": { "message": "Obere Leisten einklappen" },
+  "cardCollapseDesc": { "message": "Fügt eine Schaltfläche zum Ein-/Ausklappen der GitLab-Navigationsleisten hinzu. Spart Platz und hilft beim Fokussieren." },
+  "cardHideSectionsTitle": { "message": "UI-Bereiche ausblenden" },
+  "cardHideSectionsDesc": { "message": "Rechte Seitenleiste auf MR-Seiten ausblenden für volle Inhaltsbreite." },
+
+  "quickComments": { "message": "Schnellkommentare" },
+  "quickCommentsHint": { "message": "Ein-Klick-Schaltflächen, die sofort einen allgemeinen Kommentar zum MR posten (nicht inline zum Code). Schaltflächen erscheinen in der Aktionsleiste." },
+  "quickCommentsAdd": { "message": "Kommentar hinzufügen" },
+  "cardQuickCommentsTitle": { "message": "Schnellkommentare" },
+  "cardQuickCommentsDesc": { "message": "Konfigurierbare Vorlage-Kommentar-Buttons auf der MR-Seite. LGTM, Korrekturen nötig oder beliebige Kommentare mit einem Klick posten." }
 }

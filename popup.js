@@ -86,9 +86,15 @@ var DEFAULTS = Object.assign({}, BUTTON_DEFAULTS, {
   show_reviewer_badge: false,
   show_jira_details: false,
   show_copy_mr: false,
+  show_threads_badge: false,
+  show_size_badge: false,
+  show_conflicts_badge: false,
   // show_group_by_author: false,
+  collapse_bars: false,
+  hide_right_sidebar: false,
   jira_url: '',
   jira_ticket_regex: '',
+  quickComments: [],
   jiraQuickActions: [],
   reviewersList: '',
   reviewersJob: 'get-reviewers',
@@ -219,7 +225,14 @@ function renderDefaultTab(container) {
     '<div class="toggle"><input type="checkbox" id="show_needs_review"><label for="show_needs_review">' + escHtml(t('showNeedsReview')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="show_reviewer_badge"><label for="show_reviewer_badge">' + escHtml(t('showReviewerBadge')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="show_copy_mr"><label for="show_copy_mr">' + escHtml(t('showCopyMr')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_threads_badge"><label for="show_threads_badge">' + escHtml(t('showThreadsBadge')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_size_badge"><label for="show_size_badge">' + escHtml(t('showSizeBadge')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_conflicts_badge"><label for="show_conflicts_badge">' + escHtml(t('showConflictsBadge')) + '</label></div>' +
     // '<div class="toggle"><input type="checkbox" id="show_group_by_author"><label for="show_group_by_author">' + escHtml(t('showGroupByAuthor')) + '</label></div>' +
+    '<div class="sep"></div>' +
+    '<h4>' + escHtml(t('uiCustomization')) + '</h4>' +
+    '<div class="toggle"><input type="checkbox" id="collapse_bars"><label for="collapse_bars">' + escHtml(t('collapseBars')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="hide_right_sidebar"><label for="hide_right_sidebar">' + escHtml(t('hideRightSidebar')) + '</label></div>' +
     '<div class="sep"></div>' +
     '<h4>' + escHtml(t('jiraIntegration')) + '</h4>' +
     '<div class="field"><label>' + escHtml(t('jiraUrl')) + '</label><input type="text" id="jira_url" placeholder="https://jira.company.com"><div class="hint">' + escHtml(t('jiraUrlHint')) + '</div></div>' +
@@ -248,6 +261,11 @@ function renderDefaultTab(container) {
     '</select></div>' +
     '<div class="field"><label>' + escHtml(t('commitMessage')) + '</label><input type="text" id="versionCommitTemplate" placeholder="fix: bump version to {version}">' +
     '<div class="hint">' + escHtml(t('commitMessageHint')) + '</div></div>' +
+    '<div class="sep"></div>' +
+    '<h4>' + escHtml(t('quickComments')) + '</h4>' +
+    '<div class="hint" style="margin-bottom:8px">' + escHtml(t('quickCommentsHint')) + '</div>' +
+    '<div id="quickCommentsList"></div>' +
+    '<button type="button" id="addQuickComment" class="add-btn">+ ' + escHtml(t('quickCommentsAdd')) + '</button>' +
     '<div class="sep"></div>' +
     '<h4>' + escHtml(t('reviewers')) + '</h4>' +
     '<div class="field"><label>' + escHtml(t('reviewersList')) + '</label><input type="text" id="reviewersList" placeholder="@user1, @user2"><div class="hint">' + escHtml(t('reviewersListHint')) + '</div></div>' +
@@ -278,7 +296,12 @@ function renderDefaultTab(container) {
   document.getElementById('show_needs_review').checked = allData.show_needs_review || false;
   document.getElementById('show_reviewer_badge').checked = allData.show_reviewer_badge || false;
   document.getElementById('show_copy_mr').checked = allData.show_copy_mr || false;
+  document.getElementById('show_threads_badge').checked = allData.show_threads_badge || false;
+  document.getElementById('show_size_badge').checked = allData.show_size_badge || false;
+  document.getElementById('show_conflicts_badge').checked = allData.show_conflicts_badge || false;
   // document.getElementById('show_group_by_author').checked = allData.show_group_by_author || false;
+  document.getElementById('collapse_bars').checked = allData.collapse_bars || false;
+  document.getElementById('hide_right_sidebar').checked = allData.hide_right_sidebar || false;
   document.getElementById('jira_url').value = allData.jira_url || '';
   document.getElementById('jira_ticket_regex').value = allData.jira_ticket_regex || '';
   document.getElementById('show_jira_details').checked = allData.show_jira_details || false;
@@ -300,6 +323,10 @@ function renderDefaultTab(container) {
         showSaved();
       });
     });
+  });
+  renderQuickComments(allData.quickComments || []);
+  document.getElementById('addQuickComment').addEventListener('click', function() {
+    addQuickCommentRow('', '');
   });
   document.getElementById('reviewersList').value = allData.reviewersList || '';
   document.getElementById('reviewersJob').value = allData.reviewersJob || 'get-reviewers';
@@ -659,6 +686,42 @@ function getJiraQuickActionsFromUI() {
   return actions;
 }
 
+// Quick comments
+function renderQuickComments(comments) {
+  var list = document.getElementById('quickCommentsList');
+  list.innerHTML = '';
+  (comments || []).forEach(function(c) {
+    addQuickCommentRow(c.label || '', c.text || '');
+  });
+}
+
+function addQuickCommentRow(label, text) {
+  var list = document.getElementById('quickCommentsList');
+  var row = document.createElement('div');
+  row.className = 'quick-comment-row';
+  row.innerHTML =
+    '<div class="jqa-row">' +
+      '<input type="text" data-field="label" placeholder="LGTM" value="' + escHtml(label) + '" style="flex:1">' +
+      '<span class="remove-btn" title="Remove">&times;</span>' +
+    '</div>' +
+    '<div class="jqa-row">' +
+      '<input type="text" data-field="text" placeholder="Looks good to me!" value="' + escHtml(text) + '" style="width:100%">' +
+    '</div>';
+  row.querySelector('.remove-btn').addEventListener('click', function() { row.remove(); });
+  list.appendChild(row);
+}
+
+function getQuickCommentsFromUI() {
+  var rows = document.querySelectorAll('#quickCommentsList .quick-comment-row');
+  var comments = [];
+  rows.forEach(function(row) {
+    var label = row.querySelector('[data-field="label"]').value.trim();
+    var text = row.querySelector('[data-field="text"]').value.trim();
+    if (label && text) comments.push({ label: label, text: text });
+  });
+  return comments;
+}
+
 function getCustomJobsFromUI(listId) {
   var rows = document.querySelectorAll('#' + listId + ' .custom-job');
   var jobs = [];
@@ -715,7 +778,12 @@ function saveDefaultTab() {
   settings.show_needs_review = document.getElementById('show_needs_review').checked;
   settings.show_reviewer_badge = document.getElementById('show_reviewer_badge').checked;
   settings.show_copy_mr = document.getElementById('show_copy_mr').checked;
+  settings.show_threads_badge = document.getElementById('show_threads_badge').checked;
+  settings.show_size_badge = document.getElementById('show_size_badge').checked;
+  settings.show_conflicts_badge = document.getElementById('show_conflicts_badge').checked;
   // settings.show_group_by_author = document.getElementById('show_group_by_author').checked;
+  settings.collapse_bars = document.getElementById('collapse_bars').checked;
+  settings.hide_right_sidebar = document.getElementById('hide_right_sidebar').checked;
   var newJiraUrl = (document.getElementById('jira_url').value || '').trim().replace(/\/+$/, '');
   if (newJiraUrl && newJiraUrl !== allData.jira_url) {
     // Request host permission for Jira domain
@@ -730,6 +798,7 @@ function saveDefaultTab() {
   settings.show_jira_details = document.getElementById('show_jira_details').checked;
   settings.jiraQuickActions = getJiraQuickActionsFromUI();
   settings.language = document.getElementById('language').value || 'auto';
+  settings.quickComments = getQuickCommentsFromUI();
   settings.reviewersList = (document.getElementById('reviewersList').value || '').trim();
   settings.reviewersJob = (document.getElementById('reviewersJob').value || '').trim();
   settings.customJobs = getCustomJobsFromUI('customJobsList').filter(function(j) { return j.label && j.jobName; });

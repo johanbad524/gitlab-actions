@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.0
+
+### New features
+- **Conflicts indicator** — red CONFLICTS badge on MR detail page and MR list when the branch has merge conflicts. List badge is togglable in settings.
+- **Unresolved threads count** — red badge on MR list showing the number of unresolved discussion threads per MR. Fetches via API with 5 min cache.
+- **MR size labels** — color-coded S/M/L/XL badges on MR list based on changed lines count (S: 1-50, M: 51-200, L: 201-500, XL: 500+). Falls back to file count on older GitLab versions.
+- **Quick comments** — configurable template comment buttons on MR detail page. Instantly posts a general comment to the MR with one click. Configure in popup settings.
+- **Collapse top bars** — button to collapse/expand GitLab top navigation bars. State persisted per session.
+- **Hide right sidebar** — toggle in settings to hide the right sidebar on MR pages for full-width content.
+
+### Improvements
+- **Jira multi-ticket separation** — visual separators between Jira ticket badge groups when MR title contains multiple tickets.
+- **Parallel API fetching** — MR metadata (size, threads, conflicts) fetched in batches of 5 instead of sequentially.
+
+---
+
 ## 1.4.0
 
 ### New features

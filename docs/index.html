@@ -51,7 +51,7 @@
     "screenshot": "https://termyanen.github.io/gitlab-actions/screenshots/1-mr-buttons-and-jira-badges.png",
     "image": "https://termyanen.github.io/gitlab-actions/og-image.png",
     "author": { "@type": "Person", "name": "Roman Termyanen", "url": "https://github.com/termyanen" },
-    "softwareVersion": "1.4.1",
+    "softwareVersion": "1.5.0",
     "license": "https://opensource.org/licenses/MIT",
     "inLanguage": ["en", "ru", "zh", "ja", "de", "fr", "es"],
     "keywords": "GitLab, Chrome extension, merge request, auto-merge, rebase, Jira, CI/CD, DevOps"
@@ -511,6 +511,22 @@
         <h3 data-i18n="fCustomTitle">Fully Customizable</h3>
         <p data-i18n="fCustomDesc">Drag &amp; drop button order, per-project profiles with separate settings, custom CI job buttons. Configure everything from the extension popup.</p>
       </div>
+      <!-- Quick Comments -->
+      <div class="bento-card">
+        <div class="bento-icon icon-cyan">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 4h14a1 1 0 011 1v8a1 1 0 01-1 1h-5l-4 4v-4H3a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 data-i18n="fQuickCommTitle">Quick Comments</h3>
+        <p data-i18n="fQuickCommDesc">One-click buttons that instantly post a general comment to the MR. Configure templates like LGTM, Needs fixes, or any custom text in settings.</p>
+      </div>
+      <!-- Collapse & Hide -->
+      <div class="bento-card">
+        <div class="bento-icon icon-orange">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 7h12M4 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 4l3 3 3-3M7 16l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 data-i18n="fUiTitle">UI Customization</h3>
+        <p data-i18n="fUiDesc">Collapse top navigation bars with a toggle button. Hide the right sidebar on MR pages for full-width content. State persisted per session.</p>
+      </div>
       <!-- Background tracker -->
       <div class="bento-card span-2">
         <div class="bento-icon icon-red">
@@ -561,6 +577,27 @@
         </div>
       </div>
       <div class="feature-item">
+        <div class="feature-dot" style="background:var(--red)"></div>
+        <div>
+          <h4 data-i18n="fThreadsTitle">Unresolved Threads Count</h4>
+          <p data-i18n="fThreadsDesc">Red badge showing the number of unresolved discussion threads on each MR. Fetched via API with 5-minute cache.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--cyan)"></div>
+        <div>
+          <h4 data-i18n="fSizeTitle">MR Size Labels</h4>
+          <p data-i18n="fSizeDesc">Color-coded S/M/L/XL badges based on lines changed. Quickly assess MR complexity before opening.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-dot" style="background:var(--red)"></div>
+        <div>
+          <h4 data-i18n="fConflictsTitle">Conflicts Indicator</h4>
+          <p data-i18n="fConflictsDesc">Red CONFLICTS badge on MR list and detail pages when the branch has merge conflicts that need to be resolved.</p>
+        </div>
+      </div>
+      <div class="feature-item">
         <div class="feature-dot" style="background:var(--cyan)"></div>
         <div>
           <h4 data-i18n="fAgeTitle">MR Age Badge</h4>
@@ -568,7 +605,7 @@
         </div>
       </div>
       <div class="feature-item">
-        <div class="feature-dot" style="background:var(--red)"></div>
+        <div class="feature-dot" style="background:var(--orange)"></div>
         <div>
           <h4 data-i18n="fConfirmTitle">Skip Confirmations</h4>
           <p data-i18n="fConfirmDesc">Optional setting to disable all confirmation dialogs for one-click workflow. For experienced users who prefer speed.</p>
@@ -740,10 +777,20 @@
         fReviewerDesc: 'Scans MR comments for reviewer assignments. Shows a badge when you are mentioned as a reviewer. Cached for 5 minutes.',
         fCopyListTitle: 'Copy MR from List',
         fCopyListDesc: 'Copy button on each MR in the list. Copies title and link to clipboard without opening the merge request.',
+        fThreadsTitle: 'Unresolved Threads Count',
+        fThreadsDesc: 'Red badge showing the number of unresolved discussion threads on each MR. Fetched via API with 5-minute cache.',
+        fSizeTitle: 'MR Size Labels',
+        fSizeDesc: 'Color-coded S/M/L/XL badges based on lines changed. Quickly assess MR complexity before opening.',
+        fConflictsTitle: 'Conflicts Indicator',
+        fConflictsDesc: 'Red CONFLICTS badge on MR list and detail pages when the branch has merge conflicts that need to be resolved.',
         fAgeTitle: 'MR Age Badge',
         fAgeDesc: 'Shows time elapsed since the MR was created. Quickly spot stale merge requests that need attention.',
         fConfirmTitle: 'Skip Confirmations',
         fConfirmDesc: 'Optional setting to disable all confirmation dialogs for one-click workflow. For experienced users who prefer speed.',
+        fQuickCommTitle: 'Quick Comments',
+        fQuickCommDesc: 'One-click buttons that instantly post a general comment to the MR. Configure templates like LGTM, Needs fixes, or any custom text in settings.',
+        fUiTitle: 'UI Customization',
+        fUiDesc: 'Collapse top navigation bars with a toggle button. Hide the right sidebar on MR pages for full-width content. State persisted per session.',
 
         secJiraLabel: 'Jira Integration', secJiraTitle: 'Jira context without leaving GitLab',
         secJiraSub: 'See ticket status, change assignee, transition workflows \u2014 all from the merge request page. Uses session cookies, no API tokens.',
@@ -813,10 +860,20 @@
         fReviewerDesc: 'Сканирует комментарии MR на назначение ревьюеров. Показывает бейдж, когда вы упомянуты как ревьюер. Кэш 5 минут.',
         fCopyListTitle: 'Копирование MR из списка',
         fCopyListDesc: 'Кнопка копирования на каждом MR в списке. Копирует заголовок и ссылку в буфер без открытия merge request.',
+        fThreadsTitle: 'Нерешённые треды',
+        fThreadsDesc: 'Красный бейдж с количеством нерешённых тредов на каждом MR. Данные из API с кэшем 5 минут.',
+        fSizeTitle: 'Размер MR',
+        fSizeDesc: 'Цветные бейджи S/M/L/XL по количеству изменённых строк. Быстрая оценка сложности MR.',
+        fConflictsTitle: 'Индикатор конфликтов',
+        fConflictsDesc: 'Красный бейдж КОНФЛИКТЫ в списке и на странице MR, когда в ветке есть конфликты слияния.',
         fAgeTitle: 'Возраст MR',
         fAgeDesc: 'Показывает время с момента создания MR. Быстро находите застоявшиеся merge requests.',
         fConfirmTitle: 'Пропуск подтверждений',
         fConfirmDesc: 'Опциональная настройка отключения всех диалогов подтверждения. Для опытных пользователей, которые ценят скорость.',
+        fQuickCommTitle: 'Быстрые комментарии',
+        fQuickCommDesc: 'Кнопки для мгновенной отправки общего комментария к MR. Настройте шаблоны типа LGTM, Needs fixes или любой текст.',
+        fUiTitle: 'Настройка интерфейса',
+        fUiDesc: 'Сворачивание верхних панелей навигации кнопкой. Скрытие правого сайдбара на страницах MR для контента на всю ширину. Состояние сохраняется в сессии.',
 
         secJiraLabel: 'Интеграция с Jira', secJiraTitle: 'Контекст Jira без выхода из GitLab',
         secJiraSub: 'Статусы тикетов, смена ответственного, переходы по воркфлоу \u2014 всё со страницы merge request. Через session cookies, без API-токенов.',

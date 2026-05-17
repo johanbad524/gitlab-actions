@@ -29,6 +29,13 @@
   "strategyMajor": { "message": "Major (X.0.0)" },
   "commitMessage": { "message": "Commit message" },
   "commitMessageHint": { "message": "Use {version} as placeholder" },
+  "quickComments": { "message": "Quick comments" },
+  "quickCommentsHint": { "message": "One-click buttons that instantly post a general comment to the MR (not inline to code). Buttons appear in the action bar." },
+  "quickCommentsAdd": { "message": "Add comment" },
+
+  "cardQuickCommentsTitle": { "message": "Quick comments" },
+  "cardQuickCommentsDesc": { "message": "Configurable template comment buttons on MR page. Post LGTM, Needs fixes, or any custom comment with one click." },
+
   "reviewers": { "message": "Reviewers" },
   "reviewersList": { "message": "Reviewers list" },
   "reviewersListHint": { "message": "Usernames to assign as reviewers (@user1, @user2). If set — ignores comments and job." },
@@ -176,6 +183,16 @@
   "cardReviewersTitle": { "message": "Reviewers" },
   "cardReviewersDesc": { "message": "Repost last reviewer assignment comment or trigger a reviewer pipeline job." },
 
+  "uiCustomization": { "message": "UI customization" },
+  "collapseBars": { "message": "Collapse top bars button" },
+  "hideRightSidebar": { "message": "Hide right sidebar on MR pages" },
+  "collapseTopBars": { "message": "Toggle top bars" },
+
+  "cardCollapseTitle": { "message": "Collapse top bars" },
+  "cardCollapseDesc": { "message": "Adds a button to collapse/expand GitLab navigation bars. Saves space and helps you focus on content." },
+  "cardHideSectionsTitle": { "message": "Hide UI sections" },
+  "cardHideSectionsDesc": { "message": "Hide right sidebar on MR pages to get full-width content area." },
+
   "jiraIntegration": { "message": "Jira integration" },
   "jiraUrl": { "message": "Jira URL" },
   "jiraUrlHint": { "message": "e.g. https://jira.company.com — grant permission when prompted, no tokens needed" },
@@ -259,6 +276,20 @@
   "cardNeedsReviewTitle": { "message": "\"Needs my review\" toggle" },
   "cardNeedsReviewDesc": { "message": "One-click toggle to filter the MR list to show only merge requests where you are assigned as a reviewer." },
   "showCopyMr": { "message": "Copy button on MR list items" },
+  "showThreadsBadge": { "message": "Unresolved threads count on MR list" },
+  "showSizeBadge": { "message": "MR size labels (S/M/L/XL) on MR list" },
+  "showConflictsBadge": { "message": "Show conflicts indicator on MR list" },
+
+  "cardThreadsTitle": { "message": "Unresolved threads count" },
+  "cardThreadsDesc": { "message": "Shows a red badge with the number of unresolved discussion threads on each MR in the list." },
+  "cardSizeTitle": { "message": "MR size labels" },
+  "cardSizeDesc": { "message": "Color-coded size badges (S/M/L/XL) based on the number of changed lines. S: 1-50, M: 51-200, L: 201-500, XL: 500+." },
+  "conflictsBadge": { "message": "Conflicts" },
+  "conflictsBadgeHint": { "message": "This MR has merge conflicts that must be resolved" },
+
+  "cardConflictsTitle": { "message": "Conflicts indicator" },
+  "cardConflictsDesc": { "message": "Shows a red CONFLICTS badge on MR detail page when the branch has merge conflicts." },
+
   "cardCopyMrListTitle": { "message": "Copy MR from list" },
   "cardCopyMrListDesc": { "message": "Adds a copy button to each MR on the list page. Copies the MR title and link to clipboard with one click." }
 }

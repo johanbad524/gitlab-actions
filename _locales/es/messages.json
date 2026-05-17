@@ -260,5 +260,33 @@
   "cardNeedsReviewDesc": { "message": "Botón de un clic para filtrar la lista MR y mostrar solo merge requests donde estás asignado como revisor." },
   "showCopyMr": { "message": "Botón copiar en elementos de la lista MR" },
   "cardCopyMrListTitle": { "message": "Copiar MR desde la lista" },
-  "cardCopyMrListDesc": { "message": "Agrega un botón copiar a cada MR en la página de lista. Copia el título y enlace del MR al portapapeles con un clic." }
+  "cardCopyMrListDesc": { "message": "Agrega un botón copiar a cada MR en la página de lista. Copia el título y enlace del MR al portapapeles con un clic." },
+
+  "conflictsBadge": { "message": "Conflictos" },
+  "conflictsBadgeHint": { "message": "Este MR tiene conflictos de fusión que deben resolverse" },
+  "cardConflictsTitle": { "message": "Indicador de conflictos" },
+  "cardConflictsDesc": { "message": "Muestra una insignia roja CONFLICTOS en la página de detalle del MR cuando la rama tiene conflictos de fusión." },
+
+  "showThreadsBadge": { "message": "Cantidad de hilos sin resolver en la lista de MR" },
+  "showSizeBadge": { "message": "Etiquetas de tamaño de MR (S/M/L/XL) en la lista" },
+  "showConflictsBadge": { "message": "Mostrar indicador de conflictos en la lista de MR" },
+  "cardThreadsTitle": { "message": "Hilos sin resolver" },
+  "cardThreadsDesc": { "message": "Muestra una insignia roja con la cantidad de hilos de discusión sin resolver en cada MR de la lista." },
+  "cardSizeTitle": { "message": "Etiquetas de tamaño de MR" },
+  "cardSizeDesc": { "message": "Insignias de tamaño con colores (S/M/L/XL) basadas en líneas cambiadas. S: 1-50, M: 51-200, L: 201-500, XL: 500+." },
+
+  "uiCustomization": { "message": "Personalización de interfaz" },
+  "collapseBars": { "message": "Botón para colapsar barras superiores" },
+  "hideRightSidebar": { "message": "Ocultar barra lateral derecha en páginas de MR" },
+  "collapseTopBars": { "message": "Alternar barras superiores" },
+  "cardCollapseTitle": { "message": "Colapsar barras superiores" },
+  "cardCollapseDesc": { "message": "Agrega un botón para colapsar/expandir las barras de navegación de GitLab. Ahorra espacio y ayuda a concentrarse en el contenido." },
+  "cardHideSectionsTitle": { "message": "Ocultar secciones de interfaz" },
+  "cardHideSectionsDesc": { "message": "Ocultar la barra lateral derecha en páginas de MR para contenido a ancho completo." },
+
+  "quickComments": { "message": "Comentarios rápidos" },
+  "quickCommentsHint": { "message": "Botones de un clic que publican instantáneamente un comentario general en el MR (no en línea en el código). Los botones aparecen en la barra de acciones." },
+  "quickCommentsAdd": { "message": "Agregar comentario" },
+  "cardQuickCommentsTitle": { "message": "Comentarios rápidos" },
+  "cardQuickCommentsDesc": { "message": "Botones de comentarios de plantilla configurables en la página de MR. Publica LGTM, necesita correcciones o cualquier comentario personalizado con un clic." }
 }

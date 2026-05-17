@@ -355,6 +355,38 @@
   margin-right: 4px;
 }
 
+/* Quick comment buttons */
+.gl-mr-actions-ext .btn-quick-comment {
+  color: var(--gl-text-color-default, #333) !important;
+  background: var(--gl-background-color-subtle, #f0f0f0) !important;
+  border-color: var(--gl-border-color-default, #dcdcde) !important;
+  font-size: 12px !important;
+}
+
+.gl-mr-actions-ext .btn-quick-comment:hover {
+  background: var(--gl-background-color-default, #e8e8e8) !important;
+  border-color: var(--gl-text-color-secondary, #999) !important;
+}
+
+/* Conflicts indicator badge */
+.gl-mr-actions-conflict-badge {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: #dd2b0e;
+  border: 1px solid #c22;
+  cursor: default;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: ext-pulse 2s ease-in-out infinite;
+}
+
 /* MR list enhancements */
 .gl-mr-ext-dimmed {
   opacity: 0.45;
@@ -384,6 +416,97 @@
   color: #fff !important;
 }
 
+/* Unresolved threads count (in ul.controls, after comments icon) */
+li.gl-mr-ext-threads-badge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 2px;
+  color: #dd2b0e !important;
+  cursor: default;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* MR list conflict badge */
+.gl-mr-ext-conflict-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+  height: 18px;
+  line-height: 18px;
+  white-space: nowrap;
+  background: #fecaca;
+  color: #991b1b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* MR size labels */
+.gl-mr-ext-size-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 6px;
+  border-radius: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+  height: 18px;
+  line-height: 18px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.gl-mr-ext-size-badge.size-s {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.gl-mr-ext-size-badge.size-m {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.gl-mr-ext-size-badge.size-l {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.gl-mr-ext-size-badge.size-xl {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+/* Jira ticket group wrapper */
+.gl-jira-ticket-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.gl-jira-ticket-group .gl-jira-list-icon {
+  margin-left: 0;
+}
+
+.gl-jira-ticket-group .gl-jira-badge {
+  margin-left: 0;
+}
+
+/* Separator between Jira ticket groups */
+.gl-jira-ticket-sep {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: var(--gl-border-color-default, #dcdcde);
+  margin: 0 4px 0 8px;
+  vertical-align: middle;
+}
+
 /* Jira status badges */
 .gl-jira-badge {
   display: inline-block;
@@ -391,7 +514,7 @@
   font-weight: 600;
   padding: 0 6px;
   border-radius: 3px;
-  margin: 0 4px 0 6px;
+  margin: 0 0 0 6px;
   vertical-align: middle;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -612,8 +735,8 @@
 }
 
 .gl-jira-list-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   vertical-align: middle;
   margin-left: 4px;
 }
@@ -937,6 +1060,73 @@
   padding: 0 10px;
   border-radius: 4px;
 }
+
+/* Collapse top bars button */
+.gl-mr-ext-collapse-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 99999;
+  width: 28px;
+  height: 28px;
+  background: var(--gl-background-color-subtle, #f0f0f0);
+  border: 1px solid var(--gl-border-color-default, #dcdcde);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gl-text-color-secondary, #666);
+  transition: all 0.15s;
+  opacity: 0.7;
+  padding: 0;
+}
+
+.gl-mr-ext-collapse-btn:hover {
+  opacity: 1;
+  background: var(--gl-background-color-default, #fff);
+  color: var(--gl-text-color-default, #333);
+}
+
+.gl-mr-ext-collapse-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Collapsed bars state — top bars only, not sidebar */
+.gl-mr-ext-bars-collapsed .top-bar-fixed,
+.gl-mr-ext-bars-collapsed header.navbar-gitlab,
+.gl-mr-ext-bars-collapsed .navbar,
+.gl-mr-ext-bars-collapsed .with-performance-bar .performance-bar,
+.gl-mr-ext-bars-collapsed .performance-bar,
+.gl-mr-ext-bars-collapsed .js-performance-bar {
+  display: none !important;
+}
+
+.gl-mr-ext-bars-collapsed .content-wrapper,
+.gl-mr-ext-bars-collapsed .layout-page {
+  padding-top: 0 !important;
+}
+
+.gl-mr-ext-bars-collapsed .gl-mr-ext-collapse-btn {
+  top: 4px;
+}
+
+/* Hide right sidebar */
+.gl-mr-ext-hide-right-sidebar .right-sidebar,
+.gl-mr-ext-hide-right-sidebar .issuable-sidebar,
+.gl-mr-ext-hide-right-sidebar [data-testid="super-sidebar"] + .content-wrapper .right-sidebar {
+  display: none !important;
+}
+
+.gl-mr-ext-hide-right-sidebar .content-body {
+  margin-right: 0 !important;
+}
+
+.gl-mr-ext-hide-right-sidebar .merge-request-overview {
+  grid-template-columns: 1fr !important;
+}
+
 
 /* Group by author headers */
 .gl-mr-ext-group-header {

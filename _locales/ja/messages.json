@@ -260,5 +260,33 @@
   "cardNeedsReviewDesc": { "message": "ワンクリックで MR 一覧をレビュアーに割り当てられたものだけに絞り込み。" },
   "showCopyMr": { "message": "MR 一覧にコピーボタン" },
   "cardCopyMrListTitle": { "message": "一覧から MR をコピー" },
-  "cardCopyMrListDesc": { "message": "一覧ページの各 MR にコピーボタンを追加。ワンクリックで MR タイトルとリンクをクリップボードにコピー。" }
+  "cardCopyMrListDesc": { "message": "一覧ページの各 MR にコピーボタンを追加。ワンクリックで MR タイトルとリンクをクリップボードにコピー。" },
+
+  "conflictsBadge": { "message": "コンフリクト" },
+  "conflictsBadgeHint": { "message": "このMRには解決が必要なマージコンフリクトがあります" },
+  "cardConflictsTitle": { "message": "コンフリクト表示" },
+  "cardConflictsDesc": { "message": "ブランチにマージコンフリクトがある場合、MR詳細ページに赤いCONFLICTSバッジを表示します。" },
+
+  "showThreadsBadge": { "message": "MRリストに未解決スレッド数を表示" },
+  "showSizeBadge": { "message": "MRリストにサイズラベル (S/M/L/XL) を表示" },
+  "showConflictsBadge": { "message": "MR一覧にコンフリクト表示" },
+  "cardThreadsTitle": { "message": "未解決スレッド数" },
+  "cardThreadsDesc": { "message": "MRリストの各MRに未解決のディスカッションスレッド数を赤いバッジで表示します。" },
+  "cardSizeTitle": { "message": "MRサイズラベル" },
+  "cardSizeDesc": { "message": "変更行数に基づく色分けサイズバッジ (S/M/L/XL)。S: 1-50, M: 51-200, L: 201-500, XL: 500+。" },
+
+  "uiCustomization": { "message": "UI カスタマイズ" },
+  "collapseBars": { "message": "トップバー折りたたみボタン" },
+  "hideRightSidebar": { "message": "MRページの右サイドバーを非表示" },
+  "collapseTopBars": { "message": "トップバーの切り替え" },
+  "cardCollapseTitle": { "message": "トップバー折りたたみ" },
+  "cardCollapseDesc": { "message": "GitLabナビゲーションバーの折りたたみ/展開ボタンを追加。スペースを節約しコンテンツに集中できます。" },
+  "cardHideSectionsTitle": { "message": "UI要素の非表示" },
+  "cardHideSectionsDesc": { "message": "MRページの右サイドバーを非表示にして、コンテンツを全幅で表示します。" },
+
+  "quickComments": { "message": "クイックコメント" },
+  "quickCommentsHint": { "message": "ワンクリックでMRに一般コメントを即座に投稿するボタンです（コードへのインラインコメントではありません）。ボタンはアクションバーに表示されます。" },
+  "quickCommentsAdd": { "message": "コメント追加" },
+  "cardQuickCommentsTitle": { "message": "クイックコメント" },
+  "cardQuickCommentsDesc": { "message": "MRページの設定可能なテンプレートコメントボタン。LGTM、修正必要、その他カスタムコメントをワンクリックで投稿。" }
 }

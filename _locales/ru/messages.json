@@ -29,6 +29,13 @@
   "strategyMajor": { "message": "Major (X.0.0)" },
   "commitMessage": { "message": "Сообщение коммита" },
   "commitMessageHint": { "message": "Используйте {version} как плейсхолдер" },
+  "quickComments": { "message": "Быстрые комментарии" },
+  "quickCommentsHint": { "message": "Кнопки для мгновенной отправки общего комментария к MR (не инлайн к коду). Кнопки появляются в панели действий." },
+  "quickCommentsAdd": { "message": "Добавить комментарий" },
+
+  "cardQuickCommentsTitle": { "message": "Быстрые комментарии" },
+  "cardQuickCommentsDesc": { "message": "Настраиваемые шаблонные комментарии на странице MR. Отправляйте LGTM, Needs fixes или любой комментарий одним кликом." },
+
   "reviewers": { "message": "Ревьюеры" },
   "reviewersList": { "message": "Список ревьюеров" },
   "reviewersListHint": { "message": "Юзернеймы для назначения ревьюерами (@user1, @user2). Если задан — комментарии и job игнорируются." },
@@ -176,6 +183,16 @@
   "cardReviewersTitle": { "message": "Ревьюеры" },
   "cardReviewersDesc": { "message": "Повторить комментарий с назначением ревьюеров или запустить job ревьюеров." },
 
+  "uiCustomization": { "message": "Настройка интерфейса" },
+  "collapseBars": { "message": "Кнопка сворачивания верхних панелей" },
+  "hideRightSidebar": { "message": "Скрыть правый сайдбар на страницах MR" },
+  "collapseTopBars": { "message": "Свернуть/развернуть верхние панели" },
+
+  "cardCollapseTitle": { "message": "Сворачивание верхних панелей" },
+  "cardCollapseDesc": { "message": "Добавляет кнопку для сворачивания/разворачивания навигационных панелей GitLab. Экономит место и помогает сфокусироваться на контенте." },
+  "cardHideSectionsTitle": { "message": "Скрытие элементов UI" },
+  "cardHideSectionsDesc": { "message": "Скрыть правую панель на страницах MR для отображения контента на всю ширину." },
+
   "jiraIntegration": { "message": "Интеграция с Jira" },
   "jiraUrl": { "message": "Jira URL" },
   "jiraUrlHint": { "message": "напр. https://jira.company.com — подтвердите разрешение при запросе, токены не нужны" },
@@ -259,6 +276,20 @@
   "cardNeedsReviewTitle": { "message": "Кнопка \"Ждёт моего ревью\"" },
   "cardNeedsReviewDesc": { "message": "Переключатель для фильтрации списка MR — показать только те, где вы назначены ревьюером." },
   "showCopyMr": { "message": "Кнопка копирования в списке MR" },
+  "showThreadsBadge": { "message": "Количество нерешённых тредов в списке MR" },
+  "showSizeBadge": { "message": "Размер MR (S/M/L/XL) в списке" },
+  "showConflictsBadge": { "message": "Показывать индикатор конфликтов в списке MR" },
+
+  "cardThreadsTitle": { "message": "Нерешённые треды" },
+  "cardThreadsDesc": { "message": "Показывает красный бейдж с количеством нерешённых тредов обсуждений на каждом MR в списке." },
+  "cardSizeTitle": { "message": "Размер MR" },
+  "cardSizeDesc": { "message": "Цветные бейджи размера (S/M/L/XL) по количеству изменённых строк. S: 1-50, M: 51-200, L: 201-500, XL: 500+." },
+  "conflictsBadge": { "message": "Конфликты" },
+  "conflictsBadgeHint": { "message": "В этом MR есть конфликты слияния, которые нужно разрешить" },
+
+  "cardConflictsTitle": { "message": "Индикатор конфликтов" },
+  "cardConflictsDesc": { "message": "Показывает красный бейдж КОНФЛИКТЫ на странице MR при наличии конфликтов слияния." },
+
   "cardCopyMrListTitle": { "message": "Копирование MR из списка" },
   "cardCopyMrListDesc": { "message": "Добавляет кнопку копирования к каждому MR в списке. Копирует название и ссылку в буфер обмена одним кликом." }
 }

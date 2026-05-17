@@ -1056,6 +1056,7 @@
     highlight_own_mrs: false,
     reviewersList: '',
     reviewersJob: 'get-reviewers',
+    quickComments: [],
     customJobs: [],
     buttonOrder: [],
     projectProfiles: {},
@@ -1208,6 +1209,40 @@
           container.appendChild(btn);
         }
       });
+
+      // Quick comments (#35)
+      (s.quickComments || []).forEach(function(qc) {
+        if (!qc.label || !qc.text) return;
+        var qcBtn = document.createElement('button');
+        qcBtn.className = 'btn-quick-comment';
+        qcBtn.textContent = qc.label;
+        qcBtn.title = qc.text;
+        qcBtn.addEventListener('click', function() {
+          var origText = qcBtn.textContent;
+          qcBtn.disabled = true;
+          qcBtn.innerHTML = '<span class="spinner"></span>';
+          api('POST', '/projects/' + PROJECT_ID + '/merge_requests/' + MR_IID + '/notes', { body: qc.text })
+            .then(function() {
+              qcBtn.textContent = '\u2713';
+              setTimeout(function() { qcBtn.textContent = origText; qcBtn.disabled = false; }, 2000);
+            })
+            .catch(function(err) {
+              showToast(err.message, 'error');
+              qcBtn.textContent = origText;
+              qcBtn.disabled = false;
+            });
+        });
+        container.appendChild(qcBtn);
+      });
+
+      // Conflicts indicator badge
+      if (mr.has_conflicts) {
+        var conflictBadge = document.createElement('span');
+        conflictBadge.className = 'gl-mr-actions-conflict-badge';
+        conflictBadge.textContent = t('conflictsBadge');
+        conflictBadge.title = t('conflictsBadgeHint');
+        container.insertBefore(conflictBadge, container.firstChild);
+      }
 
       // Time tracker — show MR age
       if (s.show_time_tracker !== false) {

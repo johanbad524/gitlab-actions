@@ -457,12 +457,23 @@
     mrItem.dataset.glJiraBadges = badgeKey;
 
     // Remove old badges and icons
-    var old = mrItem.querySelectorAll('.gl-jira-badge, .gl-jira-list-icon');
+    var old = mrItem.querySelectorAll('.gl-jira-badge, .gl-jira-list-icon, .gl-jira-ticket-group, .gl-jira-ticket-sep');
     old.forEach(function(el) { el.remove(); });
 
-    tickets.forEach(function(ticket) {
+    tickets.forEach(function(ticket, idx) {
       var status = statuses[ticket];
       if (!status) return;
+
+      // Separator between ticket groups
+      if (idx > 0) {
+        var sep = document.createElement('span');
+        sep.className = 'gl-jira-ticket-sep';
+        titleContainer.appendChild(sep);
+      }
+
+      // Group wrapper for this ticket
+      var group = document.createElement('span');
+      group.className = 'gl-jira-ticket-group';
 
       // Type & priority icons (before status badge)
       if (_showJiraDetails) {
@@ -471,14 +482,14 @@
           typeEl.className = 'gl-jira-list-icon';
           typeEl.src = status.typeIcon;
           typeEl.title = status.type || '';
-          titleContainer.appendChild(typeEl);
+          group.appendChild(typeEl);
         }
         if (status.priorityIcon) {
           var prioEl = document.createElement('img');
           prioEl.className = 'gl-jira-list-icon';
           prioEl.src = status.priorityIcon;
           prioEl.title = status.priority || '';
-          titleContainer.appendChild(prioEl);
+          group.appendChild(prioEl);
         }
       }
 
@@ -493,7 +504,9 @@
         e.stopPropagation();
         openJiraSidebar(ticket, _jiraUrlStored);
       });
-      titleContainer.appendChild(badge);
+      group.appendChild(badge);
+
+      titleContainer.appendChild(group);
     });
   }
 
@@ -1282,11 +1295,180 @@
   }
 
   // =========================================================================
+  // Unresolved threads count (#26) + MR size labels (#27)
+  // =========================================================================
+
+  var _mrMetaCache = {}; // { href: { threads, changes, ts } }
+  var MR_META_CACHE_TTL = 5 * 60 * 1000;
+  var _mrMetaFetching = false;
+
+  function renderThreadsBadge(mrItem, count) {
+    if (mrItem.querySelector('.gl-mr-ext-threads-badge')) return;
+    if (count === 0) return;
+
+    var controlsUl = mrItem.querySelector('ul.controls');
+    if (!controlsUl) return;
+
+    var li = document.createElement('li');
+    li.className = 'gl-mr-ext-threads-badge';
+    li.title = count + ' unresolved thread' + (count === 1 ? '' : 's');
+    li.innerHTML = '<svg viewBox="0 0 16 16" class="s16"><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" d="M2.75 1.75h10.5c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1H8.56l-3.4 3.4a.25.25 0 0 1-.43-.18V10.75H2.75c-.55 0-1-.45-1-1v-7c0-.55.45-1 1-1Z"/><line x1="5" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="7.5" x2="9" y2="7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>' +
+      '<span>' + count + '</span>';
+
+    // Insert after comments icon if found, otherwise prepend to controls
+    var commentsEl = mrItem.querySelector('[data-testid="issuable-comments"]');
+    var commentsLi = commentsEl ? commentsEl.closest('li') : null;
+    if (commentsLi && commentsLi.nextSibling) {
+      controlsUl.insertBefore(li, commentsLi.nextSibling);
+    } else if (commentsLi) {
+      controlsUl.appendChild(li);
+    } else {
+      controlsUl.insertBefore(li, controlsUl.firstChild);
+    }
+  }
+
+  function renderSizeBadge(mrItem, changesLines, changesFiles) {
+    if (mrItem.querySelector('.gl-mr-ext-size-badge')) return;
+    var titleEl = mrItem.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+    if (!titleEl) return;
+    var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+
+    var label, cls, tooltip;
+    if (changesLines > 0) {
+      // Size by lines changed
+      if (changesLines <= 50) { label = 'S'; cls = 'size-s'; }
+      else if (changesLines <= 200) { label = 'M'; cls = 'size-m'; }
+      else if (changesLines <= 500) { label = 'L'; cls = 'size-l'; }
+      else { label = 'XL'; cls = 'size-xl'; }
+      tooltip = changesLines + ' lines, ' + changesFiles + ' files';
+    } else {
+      // Fallback: size by files changed
+      if (changesFiles <= 5) { label = 'S'; cls = 'size-s'; }
+      else if (changesFiles <= 15) { label = 'M'; cls = 'size-m'; }
+      else if (changesFiles <= 30) { label = 'L'; cls = 'size-l'; }
+      else { label = 'XL'; cls = 'size-xl'; }
+      tooltip = changesFiles + ' files changed';
+    }
+
+    var badge = document.createElement('span');
+    badge.className = 'gl-mr-ext-size-badge ' + cls;
+    badge.textContent = label;
+    badge.title = tooltip;
+    // Always insert right after the title link, before Jira badges
+    var firstAfterTitle = titleEl.nextSibling;
+    if (firstAfterTitle) {
+      titleContainer.insertBefore(badge, firstAfterTitle);
+    } else {
+      titleContainer.appendChild(badge);
+    }
+  }
+
+  function renderConflictBadge(mrItem) {
+    if (mrItem.querySelector('.gl-mr-ext-conflict-badge')) return;
+    var titleEl = mrItem.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+    if (!titleEl) return;
+    var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+    var badge = document.createElement('span');
+    badge.className = 'gl-mr-ext-conflict-badge';
+    badge.title = msg('conflictsBadgeHint') || 'This merge request has conflicts';
+    badge.textContent = msg('conflictsBadge') || 'CONFLICTS';
+    // Insert right after size badge, or after title link
+    var sizeBadge = mrItem.querySelector('.gl-mr-ext-size-badge');
+    var insertAfter = sizeBadge || titleEl;
+    if (insertAfter.nextSibling) {
+      titleContainer.insertBefore(badge, insertAfter.nextSibling);
+    } else {
+      titleContainer.appendChild(badge);
+    }
+  }
+
+  function fetchAndRenderMrMeta(showThreads, showSize, showConflicts) {
+    if (_mrMetaFetching) return;
+
+    var mrItems = document.querySelectorAll('.merge-request, li.issue, [data-testid="issuable-container"] > li, .issuable-list > li');
+    if (!mrItems.length) return;
+
+    var toFetch = [];
+    var now = Date.now();
+
+    mrItems.forEach(function(item) {
+      var titleEl = item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+      if (!titleEl) return;
+      var href = titleEl.href;
+      var cached = _mrMetaCache[href];
+      if (cached && (now - cached.ts) < MR_META_CACHE_TTL) {
+        _jiraRenderingBadges = true;
+        if (showThreads) renderThreadsBadge(item, cached.threads);
+        if (showSize) renderSizeBadge(item, cached.changesLines, cached.changesFiles);
+        if (showConflicts && cached.conflicts) renderConflictBadge(item);
+        _jiraRenderingBadges = false;
+        return;
+      }
+      var parsed = parseMrPath(href);
+      if (parsed) {
+        toFetch.push({ item: item, href: href, projectPath: parsed.projectPath, iid: parsed.iid });
+      }
+    });
+
+    if (!toFetch.length) return;
+    _mrMetaFetching = true;
+
+    var BATCH_SIZE = 5;
+
+    function fetchOneEntry(entry) {
+      var encodedPath = encodeURIComponent(entry.projectPath);
+      return api('GET', '/projects/' + encodedPath + '/merge_requests/' + entry.iid + '?include_rebase_in_progress=false')
+        .then(function(mr) {
+          var changesLines = (mr.additions !== undefined && mr.deletions !== undefined)
+            ? (parseInt(mr.additions) || 0) + (parseInt(mr.deletions) || 0)
+            : 0;
+          var changesFiles = mr.changes_count ? parseInt(mr.changes_count) : 0;
+          var conflicts = !!mr.has_conflicts;
+          if (showThreads) {
+            return api('GET', '/projects/' + encodedPath + '/merge_requests/' + entry.iid + '/discussions?per_page=100')
+              .then(function(discussions) {
+                var unresolvedCount = 0;
+                (discussions || []).forEach(function(d) {
+                  if (d.notes && d.notes.length && d.notes[0].resolvable && !d.notes[0].resolved) {
+                    unresolvedCount++;
+                  }
+                });
+                return { threads: unresolvedCount, changesLines: changesLines, changesFiles: changesFiles, conflicts: conflicts };
+              });
+          }
+          return { threads: 0, changesLines: changesLines, changesFiles: changesFiles, conflicts: conflicts };
+        })
+        .then(function(meta) {
+          _mrMetaCache[entry.href] = { threads: meta.threads, changesLines: meta.changesLines, changesFiles: meta.changesFiles, conflicts: meta.conflicts, ts: Date.now() };
+          _jiraRenderingBadges = true;
+          if (showThreads) renderThreadsBadge(entry.item, meta.threads);
+          if (showSize) renderSizeBadge(entry.item, meta.changesLines, meta.changesFiles);
+          if (showConflicts && meta.conflicts) renderConflictBadge(entry.item);
+          _jiraRenderingBadges = false;
+        })
+        .catch(function() {});
+    }
+
+    function fetchBatch(start) {
+      if (start >= toFetch.length) {
+        _mrMetaFetching = false;
+        return;
+      }
+      var batch = toFetch.slice(start, start + BATCH_SIZE);
+      Promise.all(batch.map(fetchOneEntry)).then(function() {
+        fetchBatch(start + BATCH_SIZE);
+      });
+    }
+
+    fetchBatch(0);
+  }
+
+  // =========================================================================
   // Init MR list features
   // =========================================================================
 
   if (isMrListPage()) {
-    var listDefaults = { dim_drafts: false, highlight_own_mrs: false, show_only_mine: false, show_needs_review: false, show_copy_mr: false, show_reviewer_badge: false, show_jira_details: false, skip_confirmations: false, jira_url: '', jira_ticket_regex: '' };
+    var listDefaults = { dim_drafts: false, highlight_own_mrs: false, show_only_mine: false, show_needs_review: false, show_copy_mr: false, show_reviewer_badge: false, show_threads_badge: false, show_size_badge: false, show_conflicts_badge: false, show_jira_details: false, skip_confirmations: false, jira_url: '', jira_ticket_regex: '' };
     try {
       chrome.storage.sync.get(listDefaults, function(s) {
         if (chrome.runtime.lastError) return;
@@ -1307,6 +1489,11 @@
           // Reviewer badge from comments
           if (s.show_reviewer_badge && username) {
             fetchAndRenderReviewerBadges(username);
+          }
+
+          // Unresolved threads + MR size + conflict badges
+          if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge) {
+            fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge);
           }
 
           // Jira statuses
@@ -1331,6 +1518,7 @@
             _observerTimer = setTimeout(function() {
               if (s.jira_url) fetchAndRenderJiraStatuses(s.jira_url, s.show_jira_details);
               if (s.show_reviewer_badge && username) fetchAndRenderReviewerBadges(username);
+              if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge) fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge);
             }, 1000);
           });
           var listContainer = document.querySelector('.issuable-list, .merge-requests-holder, [data-testid="issuable-list"], .content-list');
@@ -1419,5 +1607,54 @@
       });
     });
   }
+
+  // =========================================================================
+  // Collapse top bars (#63)
+  // =========================================================================
+
+  try {
+    chrome.storage.sync.get({ collapse_bars: false }, function(s) {
+      if (chrome.runtime.lastError || !s.collapse_bars) return;
+
+      var collapsed = sessionStorage.getItem('gl_mr_ext_bars_collapsed') === '1';
+
+      function applyCollapse(state) {
+        document.body.classList.toggle('gl-mr-ext-bars-collapsed', state);
+        sessionStorage.setItem('gl_mr_ext_bars_collapsed', state ? '1' : '0');
+      }
+
+      function injectCollapseBtn() {
+        if (document.querySelector('.gl-mr-ext-collapse-btn')) return;
+        var btn = document.createElement('button');
+        btn.className = 'gl-mr-ext-collapse-btn';
+        btn.title = msg('collapseTopBars');
+        btn.innerHTML = '<svg viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M3 10l5-5 5 5"/></svg>';
+        btn.addEventListener('click', function() {
+          collapsed = !collapsed;
+          btn.querySelector('svg').style.transform = collapsed ? 'rotate(180deg)' : '';
+          applyCollapse(collapsed);
+        });
+        document.body.appendChild(btn);
+        applyCollapse(collapsed);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectCollapseBtn);
+      } else {
+        injectCollapseBtn();
+      }
+    });
+  } catch(e) {}
+
+  // =========================================================================
+  // Hide UI sections (#62)
+  // =========================================================================
+
+  try {
+    chrome.storage.sync.get({ hide_right_sidebar: false }, function(s) {
+      if (chrome.runtime.lastError) return;
+      if (s.hide_right_sidebar) document.body.classList.add('gl-mr-ext-hide-right-sidebar');
+    });
+  } catch(e) {}
 
 })();
