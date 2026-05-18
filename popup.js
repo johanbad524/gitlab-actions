@@ -870,9 +870,13 @@ function saveProfileTab(path) {
 function showSaved() {
   var status = document.getElementById('status');
   status.textContent = t('saved');
+  status.className = 'status saved';
   status.style.display = 'block';
-  status.style.color = '#28a745';
-  setTimeout(function() { status.style.display = 'none'; }, 1500);
+  status.style.opacity = '1';
+  setTimeout(function() {
+    status.style.opacity = '0';
+    setTimeout(function() { status.style.display = 'none'; }, 300);
+  }, 1500);
 }
 
 // Debounced auto-save
@@ -881,8 +885,9 @@ function scheduleAutoSave() {
   if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
   var status = document.getElementById('status');
   status.textContent = t('unsavedChanges');
-  status.style.color = '#e67e22';
+  status.className = 'status unsaved';
   status.style.display = 'block';
+  status.style.opacity = '1';
   _autoSaveTimer = setTimeout(function() {
     saveSettings();
   }, 500);

@@ -1653,7 +1653,9 @@
   try {
     chrome.storage.sync.get({ hide_right_sidebar: false }, function(s) {
       if (chrome.runtime.lastError) return;
-      if (s.hide_right_sidebar) document.body.classList.add('gl-mr-ext-hide-right-sidebar');
+      if (s.hide_right_sidebar && /\/-\/merge_requests\/\d+/.test(window.location.pathname)) {
+        document.body.classList.add('gl-mr-ext-hide-right-sidebar');
+      }
     });
   } catch(e) {}
 
