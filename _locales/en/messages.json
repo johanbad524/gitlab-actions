@@ -293,6 +293,8 @@
   "cardCopyMrListTitle": { "message": "Copy MR from list" },
   "cardCopyMrListDesc": { "message": "Adds a copy button to each MR on the list page. Copies the MR title and link to clipboard with one click." },
 
+  "versionFromTarget": { "message": "Read version from target branch" },
+  "versionFromTargetHint": { "message": "Read current version from the target branch (e.g. main) instead of the source branch. Use this with merge commit strategy to avoid stale versions." },
   "showFailedJobView": { "message": "Show failed job quick view on MR page" },
   "failedJobsCount": { "message": "$1 failed job(s) — last 50 lines", "placeholders": { "1": { "content": "$1" } } },
   "failedJobTraceError": { "message": "Could not load trace" },

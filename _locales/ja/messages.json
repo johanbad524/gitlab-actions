@@ -290,6 +290,8 @@
   "cardQuickCommentsTitle": { "message": "クイックコメント" },
   "cardQuickCommentsDesc": { "message": "MRページの設定可能なテンプレートコメントボタン。LGTM、修正必要、その他カスタムコメントをワンクリックで投稿。" },
 
+  "versionFromTarget": { "message": "target branchからバージョンを読み取る" },
+  "versionFromTargetHint": { "message": "source branchではなくtarget branch（例：main）から現在のバージョンを読み取ります。merge commit戦略使用時にバージョンの古い値を回避できます。" },
   "showFailedJobView": { "message": "MRページに失敗したjobのクイックビューを表示" },
   "failedJobsCount": { "message": "$1 件の失敗した job — 最後の50行", "placeholders": { "1": { "content": "$1" } } },
   "failedJobTraceError": { "message": "ログを読み込めませんでした" },

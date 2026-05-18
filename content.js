@@ -248,7 +248,8 @@
 
       return getMR().then(function(mr) {
         var branch = mr.source_branch;
-        return api('GET', '/projects/' + PROJECT_ID + '/repository/files/' + encodeURIComponent(filePath) + '?ref=' + encodeURIComponent(branch))
+        var readRef = settings.version_from_target ? mr.target_branch : branch;
+        return api('GET', '/projects/' + PROJECT_ID + '/repository/files/' + encodeURIComponent(filePath) + '?ref=' + encodeURIComponent(readRef))
           .then(function(file) {
             var rawContent = decodeURIComponent(escape(atob(file.content)));
             var newVersion;
@@ -1065,6 +1066,7 @@
     versionPath: 'version',
     versionStrategy: 'patch',
     versionCommitTemplate: 'fix: bump version to {version}',
+    version_from_target: false,
   };
 
   function isExtensionValid() {
@@ -1148,8 +1150,8 @@
 
       var builtinDefs = {
         btn_version:          { label: t('btnVersion'),                                                        cls: 'btn-version',     action: doVersionBump,     name: t('btnVersion') },
-        btn_rebase:           { label: t('btnRebase'),                                                         cls: 'btn-pipeline',    action: doJustRebase,      name: t('btnRebase'), confirm: t('confirmRebase') },
-        btn_rebase_version:   { label: t('btnRebaseVersion'),                                                  cls: 'btn-version',     action: doRebaseVersion,   name: t('btnRebaseVersion'), confirm: t('confirmRebaseVersion') },
+        btn_rebase:           { label: t('btnRebase'),                                                         cls: 'btn-pipeline',    action: doJustRebase,      name: t('btnRebase'), confirm: t('confirmRebase'), hide: !rb },
+        btn_rebase_version:   { label: t('btnRebaseVersion'),                                                  cls: 'btn-version',     action: doRebaseVersion,   name: t('btnRebaseVersion'), confirm: t('confirmRebaseVersion'), hide: !rb },
         btn_rebase_automerge: { label: rb ? t('btnRebaseAutomerge') : t('labelAutomerge'),                     cls: 'btn-ship',        action: doRebaseAutoMerge, name: rb ? t('btnRebaseAutomerge') : t('labelAutomerge'), confirm: rb ? t('confirmRebaseAutomerge') : t('confirmAutomerge'), hide: blocked, reloadOnSuccess: true },
         btn_rebase_force:     { label: rb ? t('btnRebaseForce') : t('labelForceMerge'),                        cls: 'btn-force-ship',  action: doRebaseForce,     name: rb ? t('btnRebaseForce') : t('labelForceMerge'), confirm: rb ? t('confirmRebaseForce') : t('confirmForce'), hide: blocked, reloadOnSuccess: true },
         btn_ship:             { label: rb ? t('btnShip') : t('labelVersionAutomerge'),                         cls: 'btn-ship',        action: doShip,            name: 'Ship', confirm: rb ? t('confirmShip') : t('confirmShipNoRebase'), hide: blocked, reloadOnSuccess: true },

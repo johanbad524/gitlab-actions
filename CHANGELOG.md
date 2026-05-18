@@ -10,6 +10,8 @@
 - **Quick comments** — configurable template comment buttons on MR detail page. Instantly posts a general comment to the MR with one click. Configure in popup settings.
 - **Collapse top bars** — button to collapse/expand GitLab top navigation bars. State persisted per session.
 - **Hide right sidebar** — toggle in settings to hide the right sidebar on MR pages for full-width content.
+- **Version from target branch** — option to read the current version from the target branch (e.g. main) instead of the source branch. Prevents stale versions when using merge commit strategy.
+- **Smart rebase button visibility** — rebase and rebase+version buttons are now hidden when the project merge method does not require rebase (merge commit strategy).
 
 ### Improvements
 - **Jira multi-ticket separation** — visual separators between Jira ticket badge groups when MR title contains multiple tickets.

@@ -275,6 +275,8 @@
   "cardQuickCommentsTitle": { "message": "Schnellkommentare" },
   "cardQuickCommentsDesc": { "message": "Konfigurierbare Vorlage-Kommentar-Buttons auf der MR-Seite. LGTM, Korrekturen nötig oder beliebige Kommentare mit einem Klick posten." },
 
+  "versionFromTarget": { "message": "Version aus dem target branch lesen" },
+  "versionFromTargetHint": { "message": "Aktuelle Version aus dem target branch (z.B. main) statt dem source branch lesen. Verwenden Sie dies bei der merge commit Strategie, um veraltete Versionen zu vermeiden." },
   "showFailedJobView": { "message": "Fehlgeschlagene Jobs Schnellansicht auf der MR-Seite anzeigen" },
   "failedJobsCount": { "message": "$1 fehlgeschlagene(r) Job(s) — letzte 50 Zeilen", "placeholders": { "1": { "content": "$1" } } },
   "failedJobTraceError": { "message": "Log konnte nicht geladen werden" },

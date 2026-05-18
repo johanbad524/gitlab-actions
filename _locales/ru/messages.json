@@ -293,6 +293,8 @@
   "cardCopyMrListTitle": { "message": "Копирование MR из списка" },
   "cardCopyMrListDesc": { "message": "Добавляет кнопку копирования к каждому MR в списке. Копирует название и ссылку в буфер обмена одним кликом." },
 
+  "versionFromTarget": { "message": "Брать версию из target-ветки" },
+  "versionFromTargetHint": { "message": "Читать текущую версию из target-ветки (напр. main) вместо source. Используйте при merge commit стратегии, чтобы версия не откатывалась." },
   "showFailedJobView": { "message": "Показывать ошибки пайплайна на странице MR" },
   "failedJobsCount": { "message": "Упавших jobs: $1 — последние 50 строк", "placeholders": { "1": { "content": "$1" } } },
   "failedJobTraceError": { "message": "Не удалось загрузить лог" },

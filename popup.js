@@ -107,6 +107,7 @@ var DEFAULTS = Object.assign({}, BUTTON_DEFAULTS, {
   versionPath: 'version',
   versionStrategy: 'patch',
   versionCommitTemplate: 'fix: bump version to {version}',
+  version_from_target: false,
 });
 
 var currentProjectPath = null;
@@ -263,6 +264,8 @@ function renderDefaultTab(container) {
     '</select></div>' +
     '<div class="field"><label>' + escHtml(t('commitMessage')) + '</label><input type="text" id="versionCommitTemplate" placeholder="fix: bump version to {version}">' +
     '<div class="hint">' + escHtml(t('commitMessageHint')) + '</div></div>' +
+    '<div class="toggle"><input type="checkbox" id="version_from_target"><label for="version_from_target">' + escHtml(t('versionFromTarget')) + '</label></div>' +
+    '<div class="hint">' + escHtml(t('versionFromTargetHint')) + '</div>' +
     '<div class="sep"></div>' +
     '<h4>' + escHtml(t('quickComments')) + '</h4>' +
     '<div class="hint" style="margin-bottom:8px">' + escHtml(t('quickCommentsHint')) + '</div>' +
@@ -381,6 +384,7 @@ function renderDefaultTab(container) {
   document.getElementById('versionPath').value = allData.versionPath || 'version';
   document.getElementById('versionStrategy').value = allData.versionStrategy || 'patch';
   document.getElementById('versionCommitTemplate').value = allData.versionCommitTemplate || 'fix: bump version to {version}';
+  document.getElementById('version_from_target').checked = allData.version_from_target || false;
 
   document.getElementById('addCustomJob').addEventListener('click', function() {
     var current = getCustomJobsFromUI('customJobsList');
@@ -818,6 +822,7 @@ function saveDefaultTab() {
   settings.versionPath = (document.getElementById('versionPath').value || '').trim() || 'version';
   settings.versionStrategy = document.getElementById('versionStrategy').value || 'patch';
   settings.versionCommitTemplate = (document.getElementById('versionCommitTemplate').value || '').trim() || 'fix: bump version to {version}';
+  settings.version_from_target = document.getElementById('version_from_target').checked;
 
   Object.assign(allData, settings);
 

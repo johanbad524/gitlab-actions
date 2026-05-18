@@ -290,6 +290,8 @@
   "cardQuickCommentsTitle": { "message": "快速评论" },
   "cardQuickCommentsDesc": { "message": "MR页面上的可配置模板评论按钮。一键发送LGTM、需要修改或任何自定义评论。" },
 
+  "versionFromTarget": { "message": "从target branch读取版本" },
+  "versionFromTargetHint": { "message": "从target branch（如main）而非source branch读取当前版本。在使用merge commit策略时可避免版本过时。" },
   "showFailedJobView": { "message": "在MR页面显示失败job快速查看" },
   "failedJobsCount": { "message": "$1 个失败的 job — 最后 50 行", "placeholders": { "1": { "content": "$1" } } },
   "failedJobTraceError": { "message": "无法加载日志" },

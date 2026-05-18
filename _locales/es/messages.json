@@ -290,6 +290,8 @@
   "cardQuickCommentsTitle": { "message": "Comentarios rápidos" },
   "cardQuickCommentsDesc": { "message": "Botones de comentarios de plantilla configurables en la página de MR. Publica LGTM, necesita correcciones o cualquier comentario personalizado con un clic." },
 
+  "versionFromTarget": { "message": "Leer versión desde el target branch" },
+  "versionFromTargetHint": { "message": "Leer la versión actual desde el target branch (ej. main) en lugar del source branch. Use esto con la estrategia de merge commit para evitar versiones desactualizadas." },
   "showFailedJobView": { "message": "Mostrar vista rápida de jobs fallidos en la página MR" },
   "failedJobsCount": { "message": "$1 job(s) fallido(s) — últimas 50 líneas", "placeholders": { "1": { "content": "$1" } } },
   "failedJobTraceError": { "message": "No se pudo cargar el log" },
