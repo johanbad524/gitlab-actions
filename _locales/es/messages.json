@@ -288,5 +288,12 @@
   "quickCommentsHint": { "message": "Botones de un clic que publican instantáneamente un comentario general en el MR (no en línea en el código). Los botones aparecen en la barra de acciones." },
   "quickCommentsAdd": { "message": "Agregar comentario" },
   "cardQuickCommentsTitle": { "message": "Comentarios rápidos" },
-  "cardQuickCommentsDesc": { "message": "Botones de comentarios de plantilla configurables en la página de MR. Publica LGTM, necesita correcciones o cualquier comentario personalizado con un clic." }
+  "cardQuickCommentsDesc": { "message": "Botones de comentarios de plantilla configurables en la página de MR. Publica LGTM, necesita correcciones o cualquier comentario personalizado con un clic." },
+
+  "showFailedJobView": { "message": "Mostrar vista rápida de jobs fallidos en la página MR" },
+  "failedJobsCount": { "message": "$1 job(s) fallido(s) — últimas 50 líneas", "placeholders": { "1": { "content": "$1" } } },
+  "failedJobTraceError": { "message": "No se pudo cargar el log" },
+  "failedJobsMore": { "message": "...y $1 job(s) fallido(s) más", "placeholders": { "1": { "content": "$1" } } },
+  "cardFailedJobViewTitle": { "message": "Vista rápida de jobs fallidos" },
+  "cardFailedJobViewDesc": { "message": "Cuando un pipeline falla, muestra los nombres de los jobs fallidos y las últimas líneas del log de error directamente en la página MR. Sin necesidad de navegar para encontrar el error." }
 }

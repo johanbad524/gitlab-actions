@@ -291,5 +291,12 @@
   "cardConflictsDesc": { "message": "Shows a red CONFLICTS badge on MR detail page when the branch has merge conflicts." },
 
   "cardCopyMrListTitle": { "message": "Copy MR from list" },
-  "cardCopyMrListDesc": { "message": "Adds a copy button to each MR on the list page. Copies the MR title and link to clipboard with one click." }
+  "cardCopyMrListDesc": { "message": "Adds a copy button to each MR on the list page. Copies the MR title and link to clipboard with one click." },
+
+  "showFailedJobView": { "message": "Show failed job quick view on MR page" },
+  "failedJobsCount": { "message": "$1 failed job(s) — last 50 lines", "placeholders": { "1": { "content": "$1" } } },
+  "failedJobTraceError": { "message": "Could not load trace" },
+  "failedJobsMore": { "message": "...and $1 more failed job(s)", "placeholders": { "1": { "content": "$1" } } },
+  "cardFailedJobViewTitle": { "message": "Failed job quick view" },
+  "cardFailedJobViewDesc": { "message": "When a pipeline fails, shows failed job names and last lines of the error log directly on the MR page. No need to click through to find the error." }
 }

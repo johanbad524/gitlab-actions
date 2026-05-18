@@ -10,9 +10,11 @@ zip -r "$ZIPNAME" . \
   -x ".git/*" \
   -x ".idea/*" \
   -x ".vscode/*" \
+  -x "_metadata/*" \
   -x "CLAUDE.md" \
   -x "README.md" \
   -x "CHANGELOG.md" \
+  -x "ROADMAP.md" \
   -x "PRIVACY_POLICY.md" \
   -x "LICENSE" \
   -x "screenshots/*" \

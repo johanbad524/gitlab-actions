@@ -291,5 +291,12 @@
   "cardConflictsDesc": { "message": "Показывает красный бейдж КОНФЛИКТЫ на странице MR при наличии конфликтов слияния." },
 
   "cardCopyMrListTitle": { "message": "Копирование MR из списка" },
-  "cardCopyMrListDesc": { "message": "Добавляет кнопку копирования к каждому MR в списке. Копирует название и ссылку в буфер обмена одним кликом." }
+  "cardCopyMrListDesc": { "message": "Добавляет кнопку копирования к каждому MR в списке. Копирует название и ссылку в буфер обмена одним кликом." },
+
+  "showFailedJobView": { "message": "Показывать ошибки пайплайна на странице MR" },
+  "failedJobsCount": { "message": "Упавших jobs: $1 — последние 50 строк", "placeholders": { "1": { "content": "$1" } } },
+  "failedJobTraceError": { "message": "Не удалось загрузить лог" },
+  "failedJobsMore": { "message": "...и ещё $1 упавших jobs", "placeholders": { "1": { "content": "$1" } } },
+  "cardFailedJobViewTitle": { "message": "Быстрый просмотр ошибок" },
+  "cardFailedJobViewDesc": { "message": "При падении пайплайна показывает имена упавших джобов и последние строки лога ошибки прямо на странице MR. Не нужно кликать в пайплайн, чтобы найти ошибку." }
 }

@@ -9,6 +9,8 @@
   align-items: center;
   align-self: start;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .gl-mr-actions-ext button {
@@ -355,6 +357,10 @@
   margin-right: 4px;
 }
 
+.gl-dark .gl-mr-actions-time {
+  border: none;
+}
+
 /* Quick comment buttons */
 .gl-mr-actions-ext .btn-quick-comment {
   color: var(--gl-text-color-default, #333) !important;
@@ -366,6 +372,10 @@
 .gl-mr-actions-ext .btn-quick-comment:hover {
   background: var(--gl-background-color-default, #e8e8e8) !important;
   border-color: var(--gl-text-color-secondary, #999) !important;
+}
+
+.gl-dark .gl-mr-actions-ext .btn-quick-comment {
+  border: none !important;
 }
 
 /* Conflicts indicator badge */
@@ -1137,4 +1147,110 @@ li.gl-mr-ext-threads-badge {
   background: var(--gl-background-color-subtle, #f0f0f0);
   border-bottom: 1px solid var(--gl-border-color-default, #dcdcde);
   letter-spacing: 0.3px;
+}
+
+/* Failed job quick view */
+.gl-mr-actions-failed-jobs {
+  border-top: 1px solid var(--gl-border-color-section, var(--gl-border-color-default, #dcdcde));
+  padding: 12px 20px;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.gl-mr-actions-failed-jobs-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--gl-text-color-danger, #dd2b0e);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gl-mr-actions-failed-jobs-title {
+  flex: 1;
+}
+
+.gl-mr-actions-failed-jobs-toggle {
+  display: inline-flex;
+  color: var(--gl-text-color-secondary, #666);
+  transition: transform 0.15s;
+  transform: rotate(180deg);
+}
+
+.gl-mr-actions-failed-jobs.collapsed .gl-mr-actions-failed-jobs-toggle {
+  transform: rotate(90deg);
+}
+
+.gl-mr-actions-failed-jobs-list {
+  margin-top: 8px;
+}
+
+.gl-mr-actions-failed-job-item {
+  border: 1px solid var(--gl-border-color-default, #dcdcde);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.gl-mr-actions-failed-job-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 8px 12px;
+  background: var(--gl-background-color-subtle, #f0f0f0);
+}
+
+.gl-mr-actions-failed-job-name a {
+  color: var(--gl-text-color-danger, #dd2b0e);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.gl-mr-actions-failed-job-name a:hover {
+  text-decoration: underline;
+}
+
+.gl-mr-actions-failed-job-stage {
+  font-size: 11px;
+  color: var(--gl-text-color-secondary, #666);
+}
+
+.gl-mr-actions-failed-job-expand {
+  display: inline-flex;
+  color: var(--gl-text-color-secondary, #666);
+  margin-left: auto;
+  transition: transform 0.15s;
+  transform: rotate(180deg);
+}
+
+.gl-mr-actions-failed-job-item.collapsed .gl-mr-actions-failed-job-expand {
+  transform: rotate(90deg);
+}
+
+.gl-mr-actions-failed-job-trace {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: var(--gl-monospace-font, 'GitLab Mono', 'JetBrains Mono', 'Menlo', monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  background: #1e1e1e;
+  color: #e6e6e6;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-top: 1px solid var(--gl-border-color-default, #dcdcde);
+}
+
+.gl-mr-actions-failed-jobs-more {
+  font-size: 12px;
+  color: var(--gl-text-color-secondary, #666);
+  padding: 4px 0;
+  font-style: italic;
 }

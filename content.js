@@ -1051,6 +1051,7 @@
     sound_enabled: false,
     notifications_enabled: true,
     show_time_tracker: true,
+    show_failed_job_view: true,
     skip_confirmations: false,
     dim_drafts: false,
     highlight_own_mrs: false,
@@ -1256,6 +1257,9 @@
       if (container.children.length > 0) {
         widgetSection.appendChild(container);
       }
+
+      // Failed job quick view
+      injectFailedJobView(mr, s, widgetSection);
     }).catch(function() {}).finally(function() { _injecting = false; });
   }
 
@@ -1268,6 +1272,173 @@
     if (days > 0) return days + 'd ' + (hours % 24) + 'h';
     if (hours > 0) return hours + 'h ' + (minutes % 60) + 'm';
     return minutes + 'm';
+  }
+
+  // =========================================================================
+  // Failed Job Quick View
+  // =========================================================================
+
+  var ANSI_COLORS = {
+    '30': '#555', '31': '#e05d44', '32': '#3fb950', '33': '#d29922',
+    '34': '#58a6ff', '35': '#bc8cff', '36': '#76e4f7', '37': '#e6e6e6',
+    '90': '#888', '91': '#ff7b72', '92': '#7ee787', '93': '#e3b341',
+    '94': '#79c0ff', '95': '#d2a8ff', '96': '#a5d6ff', '97': '#ffffff'
+  };
+
+  function ansiToHtml(text) {
+    // Strip GitLab section markers
+    text = text.replace(/section_(start|end):[^\r\n]*/g, '');
+    var result = '';
+    var open = false;
+    var i = 0;
+    while (i < text.length) {
+      if (text.charCodeAt(i) === 0x1b && text.charAt(i + 1) === '[') {
+        var end = text.indexOf('m', i + 2);
+        if (end === -1) { i++; continue; }
+        var codes = text.substring(i + 2, end).split(';');
+        if (open) { result += '</span>'; open = false; }
+        for (var c = 0; c < codes.length; c++) {
+          var color = ANSI_COLORS[codes[c]];
+          if (color) {
+            result += '<span style="color:' + color + '">';
+            open = true;
+            break;
+          }
+          if (codes[c] === '0' || codes[c] === '') {
+            break;
+          }
+          if (codes[c] === '1') {
+            result += '<span style="font-weight:700">';
+            open = true;
+            break;
+          }
+        }
+        i = end + 1;
+      } else {
+        var ch = text.charAt(i);
+        if (ch === '<') result += '&lt;';
+        else if (ch === '>') result += '&gt;';
+        else if (ch === '&') result += '&amp;';
+        else result += ch;
+        i++;
+      }
+    }
+    if (open) result += '</span>';
+    return result;
+  }
+
+  function fetchJobTrace(jobId) {
+    var url = GITLAB_URL + '/api/v4/projects/' + PROJECT_ID + '/jobs/' + jobId + '/trace';
+    return fetch(url, { credentials: 'same-origin' }).then(function(r) {
+      if (!r.ok) return escHtml(t('failedJobTraceError'));
+      return r.text().then(function(text) {
+        var lines = text.split('\n').filter(function(l) { return l.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').trim() !== ''; });
+        return ansiToHtml(lines.slice(-50).join('\n'));
+      });
+    }).catch(function() {
+      return escHtml(t('failedJobTraceError'));
+    });
+  }
+
+  var CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="12" height="12"><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M3 10l5-5 5 5"/></svg>';
+
+  function injectFailedJobView(mr, s, widgetSection) {
+    if (s.show_failed_job_view === false) return;
+    if (!mr.head_pipeline || mr.head_pipeline.status !== 'failed') return;
+    if (document.querySelector('.gl-mr-actions-failed-jobs')) return;
+
+    var pipelineId = mr.head_pipeline.id;
+
+    api('GET', '/projects/' + PROJECT_ID + '/pipelines/' + pipelineId + '/jobs?scope[]=failed&per_page=10')
+      .then(function(jobs) {
+        if (!jobs || !jobs.length) return;
+        if (document.querySelector('.gl-mr-actions-failed-jobs')) return;
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'gl-mr-actions-failed-jobs';
+
+        var header = document.createElement('div');
+        header.className = 'gl-mr-actions-failed-jobs-header';
+        header.innerHTML = '<span class="gl-mr-actions-failed-jobs-title">' +
+          escHtml(t('failedJobsCount', [jobs.length])) +
+          '</span>' +
+          '<span class="gl-mr-actions-failed-jobs-toggle">' + CHEVRON_SVG + '</span>';
+        wrapper.appendChild(header);
+
+        var list = document.createElement('div');
+        list.className = 'gl-mr-actions-failed-jobs-list';
+        wrapper.appendChild(list);
+
+        header.addEventListener('click', function() {
+          var visible = list.style.display !== 'none';
+          list.style.display = visible ? 'none' : '';
+          wrapper.classList.toggle('collapsed', visible);
+        });
+
+        // Limit to 5 jobs for trace fetching
+        var displayJobs = jobs.slice(0, 5);
+        var tracePromises = displayJobs.map(function(job) {
+          return fetchJobTrace(job.id).then(function(trace) {
+            return { job: job, trace: trace };
+          });
+        });
+
+        Promise.all(tracePromises).then(function(results) {
+          results.forEach(function(r, i) {
+            var item = document.createElement('div');
+            item.className = 'gl-mr-actions-failed-job-item';
+
+            var jobUrl = GITLAB_URL + '/' + PROJECT_PATH + '/-/jobs/' + r.job.id;
+            var nameRow = document.createElement('div');
+            nameRow.className = 'gl-mr-actions-failed-job-name';
+            nameRow.innerHTML = '<a href="' + escHtml(jobUrl) + '" target="_blank">' + escHtml(r.job.name) + '</a>' +
+              (r.job.stage ? ' <span class="gl-mr-actions-failed-job-stage">' + escHtml(r.job.stage) + '</span>' : '') +
+              '<span class="gl-mr-actions-failed-job-expand">' + CHEVRON_SVG + '</span>';
+            item.appendChild(nameRow);
+
+            var trace = document.createElement('pre');
+            trace.className = 'gl-mr-actions-failed-job-trace';
+            trace.innerHTML = r.trace;
+            if (i !== 0) {
+              trace.style.display = 'none';
+              item.classList.add('collapsed');
+            }
+            item.appendChild(trace);
+
+            nameRow.addEventListener('click', function(e) {
+              if (e.target.closest('a')) return;
+              var visible = trace.style.display !== 'none';
+              trace.style.display = visible ? 'none' : '';
+              item.classList.toggle('collapsed', visible);
+              if (!visible) {
+                requestAnimationFrame(function() {
+                  requestAnimationFrame(function() { trace.scrollTop = trace.scrollHeight; });
+                });
+              }
+            });
+
+            list.appendChild(item);
+          });
+
+          if (jobs.length > 5) {
+            var more = document.createElement('div');
+            more.className = 'gl-mr-actions-failed-jobs-more';
+            more.textContent = t('failedJobsMore', [jobs.length - 5]);
+            list.appendChild(more);
+          }
+
+          widgetSection.appendChild(wrapper);
+          requestAnimationFrame(function() {
+            var traces = wrapper.querySelectorAll('.gl-mr-actions-failed-job-trace');
+            for (var i = 0; i < traces.length; i++) {
+              if (traces[i].style.display !== 'none') {
+                traces[i].scrollTop = traces[i].scrollHeight;
+              }
+            }
+          });
+        });
+      })
+      .catch(function() {});
   }
 
   // =========================================================================

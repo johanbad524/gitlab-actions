@@ -273,5 +273,12 @@
   "quickCommentsHint": { "message": "Ein-Klick-Schaltflächen, die sofort einen allgemeinen Kommentar zum MR posten (nicht inline zum Code). Schaltflächen erscheinen in der Aktionsleiste." },
   "quickCommentsAdd": { "message": "Kommentar hinzufügen" },
   "cardQuickCommentsTitle": { "message": "Schnellkommentare" },
-  "cardQuickCommentsDesc": { "message": "Konfigurierbare Vorlage-Kommentar-Buttons auf der MR-Seite. LGTM, Korrekturen nötig oder beliebige Kommentare mit einem Klick posten." }
+  "cardQuickCommentsDesc": { "message": "Konfigurierbare Vorlage-Kommentar-Buttons auf der MR-Seite. LGTM, Korrekturen nötig oder beliebige Kommentare mit einem Klick posten." },
+
+  "showFailedJobView": { "message": "Fehlgeschlagene Jobs Schnellansicht auf der MR-Seite anzeigen" },
+  "failedJobsCount": { "message": "$1 fehlgeschlagene(r) Job(s) — letzte 50 Zeilen", "placeholders": { "1": { "content": "$1" } } },
+  "failedJobTraceError": { "message": "Log konnte nicht geladen werden" },
+  "failedJobsMore": { "message": "...und $1 weitere(r) fehlgeschlagene(r) Job(s)", "placeholders": { "1": { "content": "$1" } } },
+  "cardFailedJobViewTitle": { "message": "Fehlgeschlagene Jobs Schnellansicht" },
+  "cardFailedJobViewDesc": { "message": "Wenn eine Pipeline fehlschlaegt, werden die Namen der fehlgeschlagenen Jobs und die letzten Zeilen des Fehler-Logs direkt auf der MR-Seite angezeigt. Kein Durchklicken noetig, um den Fehler zu finden." }
 }

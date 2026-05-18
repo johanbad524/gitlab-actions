@@ -288,5 +288,12 @@
   "quickCommentsHint": { "message": "一键按钮，即时向MR发送普通评论（非代码行内评论）。按钮显示在操作栏中。" },
   "quickCommentsAdd": { "message": "添加评论" },
   "cardQuickCommentsTitle": { "message": "快速评论" },
-  "cardQuickCommentsDesc": { "message": "MR页面上的可配置模板评论按钮。一键发送LGTM、需要修改或任何自定义评论。" }
+  "cardQuickCommentsDesc": { "message": "MR页面上的可配置模板评论按钮。一键发送LGTM、需要修改或任何自定义评论。" },
+
+  "showFailedJobView": { "message": "在MR页面显示失败job快速查看" },
+  "failedJobsCount": { "message": "$1 个失败的 job — 最后 50 行", "placeholders": { "1": { "content": "$1" } } },
+  "failedJobTraceError": { "message": "无法加载日志" },
+  "failedJobsMore": { "message": "...还有 $1 个失败的 job", "placeholders": { "1": { "content": "$1" } } },
+  "cardFailedJobViewTitle": { "message": "失败job快速查看" },
+  "cardFailedJobViewDesc": { "message": "当pipeline失败时，直接在MR页面显示失败的job名称和错误日志的最后几行。无需逐一点击查找错误。" }
 }

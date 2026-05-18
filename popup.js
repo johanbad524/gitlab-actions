@@ -78,6 +78,7 @@ var DEFAULTS = Object.assign({}, BUTTON_DEFAULTS, {
   sound_enabled: false,
   notifications_enabled: true,
   show_time_tracker: true,
+  show_failed_job_view: true,
   skip_confirmations: false,
   dim_drafts: false,
   highlight_own_mrs: false,
@@ -216,6 +217,7 @@ function renderDefaultTab(container) {
     '<div class="toggle"><input type="checkbox" id="sound_enabled"><label for="sound_enabled">' + escHtml(t('soundNotifications')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="notifications_enabled"><label for="notifications_enabled">' + escHtml(t('desktopNotifications')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="show_time_tracker"><label for="show_time_tracker">' + escHtml(t('showTimeTracker')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_failed_job_view"><label for="show_failed_job_view">' + escHtml(t('showFailedJobView')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="skip_confirmations"><label for="skip_confirmations">' + escHtml(t('skipConfirmations')) + '</label></div>' +
     '<div class="sep"></div>' +
     '<h4>' + escHtml(t('uxEnhancer')) + '</h4>' +
@@ -289,6 +291,7 @@ function renderDefaultTab(container) {
   document.getElementById('sound_enabled').checked = allData.sound_enabled || false;
   document.getElementById('notifications_enabled').checked = allData.notifications_enabled !== false;
   document.getElementById('show_time_tracker').checked = allData.show_time_tracker !== false;
+  document.getElementById('show_failed_job_view').checked = allData.show_failed_job_view !== false;
   document.getElementById('skip_confirmations').checked = allData.skip_confirmations || false;
   document.getElementById('dim_drafts').checked = allData.dim_drafts || false;
   document.getElementById('highlight_own_mrs').checked = allData.highlight_own_mrs || false;
@@ -771,6 +774,7 @@ function saveDefaultTab() {
   settings.sound_enabled = document.getElementById('sound_enabled').checked;
   settings.notifications_enabled = document.getElementById('notifications_enabled').checked;
   settings.show_time_tracker = document.getElementById('show_time_tracker').checked;
+  settings.show_failed_job_view = document.getElementById('show_failed_job_view').checked;
   settings.skip_confirmations = document.getElementById('skip_confirmations').checked;
   settings.dim_drafts = document.getElementById('dim_drafts').checked;
   settings.highlight_own_mrs = document.getElementById('highlight_own_mrs').checked;

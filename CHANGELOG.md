@@ -3,6 +3,7 @@
 ## 1.5.0
 
 ### New features
+- **Failed job quick view** — when a pipeline fails, shows failed job names and last lines of the error log directly on the MR page. Collapsible per job, first job expanded by default. Up to 5 jobs with trace preview.
 - **Conflicts indicator** — red CONFLICTS badge on MR detail page and MR list when the branch has merge conflicts. List badge is togglable in settings.
 - **Unresolved threads count** — red badge on MR list showing the number of unresolved discussion threads per MR. Fetches via API with 5 min cache.
 - **MR size labels** — color-coded S/M/L/XL badges on MR list based on changed lines count (S: 1-50, M: 51-200, L: 201-500, XL: 500+). Falls back to file count on older GitLab versions.

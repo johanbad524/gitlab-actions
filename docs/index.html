@@ -479,6 +479,14 @@
         <h3 data-i18n="fCiTitle">CI/CD Pipeline Control</h3>
         <p data-i18n="fCiDesc">New pipeline, cancel running, retry all failed jobs, trigger custom manual jobs &mdash; manage your CI without navigating away from the MR.</p>
       </div>
+      <!-- Failed Job Quick View -->
+      <div class="bento-card">
+        <div class="bento-icon icon-red">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM10 6v5M10 13v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fFailedJobTitle">Failed Job Quick View</h3>
+        <p data-i18n="fFailedJobDesc">When a pipeline fails, see failed job names and the last lines of the error log right on the MR page. No need to click through multiple pages to find what went wrong.</p>
+      </div>
       <!-- Version bump -->
       <div class="bento-card">
         <div class="bento-icon icon-cyan">
@@ -756,6 +764,8 @@
         fShipDesc: 'Rebase, bump version, and enable auto-merge \u2014 the entire release flow in a single button. Also available: Force Ship for immediate merge bypassing pipeline wait.',
         fCiTitle: 'CI/CD Pipeline Control',
         fCiDesc: 'New pipeline, cancel running, retry all failed jobs, trigger custom manual jobs \u2014 manage your CI without navigating away from the MR.',
+        fFailedJobTitle: 'Failed Job Quick View',
+        fFailedJobDesc: 'When a pipeline fails, see failed job names and the last lines of the error log right on the MR page. No need to click through multiple pages to find what went wrong.',
         fVersionTitle: 'Smart Version Bump',
         fVersionDesc: 'Automatic version increment for package.json, pyproject.toml, version.txt, or any custom file. Configurable JSON path, strategy (patch/minor/major), and commit message template.',
         fReviewTitle: 'Quick Reviewers',
@@ -839,6 +849,8 @@
         fShipDesc: 'Rebase, поднятие версии и auto-merge \u2014 весь процесс релиза в одном клике. Также доступен Force Ship для немедленного мержа без ожидания пайплайна.',
         fCiTitle: 'Управление CI/CD',
         fCiDesc: 'Новый пайплайн, отмена запущенного, перезапуск упавших джобов, запуск кастомных ручных джобов \u2014 всё без перехода на другие страницы.',
+        fFailedJobTitle: 'Быстрый просмотр ошибок',
+        fFailedJobDesc: 'При падении пайплайна показывает имена упавших джобов и последние строки лога ошибки прямо на странице MR. Не нужно кликать в пайплайн, чтобы найти ошибку.',
         fVersionTitle: 'Умный Version Bump',
         fVersionDesc: 'Автоматическое поднятие версии в package.json, pyproject.toml, version.txt или любом другом файле. Настраиваемый путь, стратегия (patch/minor/major) и шаблон коммита.',
         fReviewTitle: 'Быстрые ревьюеры',

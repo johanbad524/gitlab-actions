@@ -288,5 +288,12 @@
   "quickCommentsHint": { "message": "ワンクリックでMRに一般コメントを即座に投稿するボタンです（コードへのインラインコメントではありません）。ボタンはアクションバーに表示されます。" },
   "quickCommentsAdd": { "message": "コメント追加" },
   "cardQuickCommentsTitle": { "message": "クイックコメント" },
-  "cardQuickCommentsDesc": { "message": "MRページの設定可能なテンプレートコメントボタン。LGTM、修正必要、その他カスタムコメントをワンクリックで投稿。" }
+  "cardQuickCommentsDesc": { "message": "MRページの設定可能なテンプレートコメントボタン。LGTM、修正必要、その他カスタムコメントをワンクリックで投稿。" },
+
+  "showFailedJobView": { "message": "MRページに失敗したjobのクイックビューを表示" },
+  "failedJobsCount": { "message": "$1 件の失敗した job — 最後の50行", "placeholders": { "1": { "content": "$1" } } },
+  "failedJobTraceError": { "message": "ログを読み込めませんでした" },
+  "failedJobsMore": { "message": "...他に $1 件の失敗した job", "placeholders": { "1": { "content": "$1" } } },
+  "cardFailedJobViewTitle": { "message": "失敗jobクイックビュー" },
+  "cardFailedJobViewDesc": { "message": "pipelineが失敗した際、失敗したjob名とエラーログの最後の数行をMRページに直接表示します。エラーを探すためにクリックして辿る必要がありません。" }
 }
