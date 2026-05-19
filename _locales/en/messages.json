@@ -314,6 +314,7 @@
   "cmdGroupNav": { "message": "Navigation" },
   "cmdGroupMr": { "message": "MR Actions" },
   "cmdGroupExt": { "message": "Extension" },
+  "cmdGroupFiles": { "message": "Files" },
 
   "cmdNavMrs": { "message": "Go to Merge Requests" },
   "cmdNavIssues": { "message": "Go to Issues" },
@@ -347,7 +348,7 @@
   "standupCopied": { "message": "Copied!" },
 
   "cardCmdPaletteTitle": { "message": "Command palette" },
-  "cardCmdPaletteDesc": { "message": "Press Cmd+K (Mac) or Ctrl+K (Win) on any GitLab page to open the command palette. Quick access to navigation, MR actions, and extension features." },
+  "cardCmdPaletteDesc": { "message": "Press Cmd+K (Mac) or Ctrl+K (Win) on any GitLab page. Navigate, run MR actions, search files by name and open them in the repo." },
   "cardStandupTitle": { "message": "Daily activity report" },
   "cardStandupDesc": { "message": "Generate a daily activity report from your GitLab data. Shows created, merged, and reviewed MRs. Copy and paste into Slack or Jira." },
   "showCherryPick": { "message": "Cherry-pick to branches" },

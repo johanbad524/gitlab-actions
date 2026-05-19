@@ -5,6 +5,7 @@
 ### New features
 - **Cherry-pick to multiple branches** — cherry-pick any commit to multiple branches at once from the commits page. Button next to each commit SHA. Modal with branch selection, real-time status per branch (success/conflict). Option to create a merge request for each cherry-pick (like native GitLab). Save default target branches in settings.
 - **Smart cherry-pick fallback** — when cherry-pick fails due to version file conflicts, automatically replays the commit via Commits API excluding the version file, preserving original author. Optional version bump in the target branch after cherry-pick. Both features configurable per-operation and in settings.
+- **File search in command palette** — type a filename in Cmd+K palette to search project files and open them in the repository.
 
 ---
 

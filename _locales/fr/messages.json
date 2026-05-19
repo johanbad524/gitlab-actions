@@ -309,6 +309,7 @@
   "cmdGroupNav": { "message": "Navigation" },
   "cmdGroupMr": { "message": "Actions MR" },
   "cmdGroupExt": { "message": "Extension" },
+  "cmdGroupFiles": { "message": "Fichiers" },
   "cmdNavMrs": { "message": "Aller aux Merge Requests" },
   "cmdNavIssues": { "message": "Aller aux Issues" },
   "cmdNavPipelines": { "message": "Aller aux Pipelines" },
@@ -337,7 +338,7 @@
   "standupCopy": { "message": "Copier dans le presse-papiers" },
   "standupCopied": { "message": "Copié !" },
   "cardCmdPaletteTitle": { "message": "Palette de commandes" },
-  "cardCmdPaletteDesc": { "message": "Appuyez sur Cmd+K (Mac) ou Ctrl+K (Win) sur n'importe quelle page GitLab pour ouvrir la palette de commandes. Accès rapide à la navigation, aux actions MR et aux fonctionnalités de l'extension." },
+  "cardCmdPaletteDesc": { "message": "Cmd+K (Mac) ou Ctrl+K (Win) sur n'importe quelle page GitLab. Navigation, actions MR, recherche de fichiers par nom et ouverture dans le depot." },
   "cardStandupTitle": { "message": "Rapport d'activité quotidien" },
   "cardStandupDesc": { "message": "Générez un rapport d'activité quotidien à partir de votre activité GitLab. Affiche les MR créés, mergés et relus. Copiez et collez dans Slack ou Jira." },
 

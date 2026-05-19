@@ -309,6 +309,7 @@
   "cmdGroupNav": { "message": "ナビゲーション" },
   "cmdGroupMr": { "message": "MR アクション" },
   "cmdGroupExt": { "message": "拡張機能" },
+  "cmdGroupFiles": { "message": "ファイル" },
   "cmdNavMrs": { "message": "マージリクエストへ移動" },
   "cmdNavIssues": { "message": "課題へ移動" },
   "cmdNavPipelines": { "message": "パイプラインへ移動" },
@@ -337,7 +338,7 @@
   "standupCopy": { "message": "クリップボードにコピー" },
   "standupCopied": { "message": "コピーしました！" },
   "cardCmdPaletteTitle": { "message": "コマンドパレット" },
-  "cardCmdPaletteDesc": { "message": "GitLab ページで Cmd+K（Mac）または Ctrl+K（Win）を押してコマンドパレットを開きます。ナビゲーション、MR アクション、拡張機能へ素早くアクセス。" },
+  "cardCmdPaletteDesc": { "message": "GitLab ページで Cmd+K（Mac）または Ctrl+K（Win）を押してください。ナビゲーション、MR アクション、ファイル名検索とリポジトリで開く。" },
   "cardStandupTitle": { "message": "日次アクティビティレポート" },
   "cardStandupDesc": { "message": "GitLab のアクティビティから日次レポートを生成。作成済み、マージ済み、レビュー済みの MR を表示。Slack や Jira にコピー＆ペースト。" },
 

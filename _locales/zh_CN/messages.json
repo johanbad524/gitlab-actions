@@ -309,6 +309,7 @@
   "cmdGroupNav": { "message": "导航" },
   "cmdGroupMr": { "message": "MR 操作" },
   "cmdGroupExt": { "message": "扩展" },
+  "cmdGroupFiles": { "message": "文件" },
   "cmdNavMrs": { "message": "前往合并请求" },
   "cmdNavIssues": { "message": "前往议题" },
   "cmdNavPipelines": { "message": "前往流水线" },
@@ -337,7 +338,7 @@
   "standupCopy": { "message": "复制到剪贴板" },
   "standupCopied": { "message": "已复制！" },
   "cardCmdPaletteTitle": { "message": "命令面板" },
-  "cardCmdPaletteDesc": { "message": "在任意 GitLab 页面按 Cmd+K (Mac) 或 Ctrl+K (Win) 打开命令面板。快速访问导航、MR 操作和扩展功能。" },
+  "cardCmdPaletteDesc": { "message": "在任意 GitLab 页面按 Cmd+K (Mac) 或 Ctrl+K (Win)。导航、MR 操作、按文件名搜索并在仓库中打开。" },
   "cardStandupTitle": { "message": "每日活动报告" },
   "cardStandupDesc": { "message": "根据您的 GitLab 活动生成每日活动报告。显示已创建、已合并和已审阅的 MR。可复制粘贴到 Slack 或 Jira。" },
 

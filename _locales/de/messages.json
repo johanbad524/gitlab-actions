@@ -294,6 +294,7 @@
   "cmdGroupNav": { "message": "Navigation" },
   "cmdGroupMr": { "message": "MR-Aktionen" },
   "cmdGroupExt": { "message": "Erweiterung" },
+  "cmdGroupFiles": { "message": "Dateien" },
   "cmdNavMrs": { "message": "Zu Merge Requests" },
   "cmdNavIssues": { "message": "Zu Issues" },
   "cmdNavPipelines": { "message": "Zu Pipelines" },
@@ -322,7 +323,7 @@
   "standupCopy": { "message": "In Zwischenablage kopieren" },
   "standupCopied": { "message": "Kopiert!" },
   "cardCmdPaletteTitle": { "message": "Befehlspalette" },
-  "cardCmdPaletteDesc": { "message": "Druecken Sie Cmd+K (Mac) oder Ctrl+K (Win) auf einer beliebigen GitLab-Seite, um die Befehlspalette zu oeffnen. Schnellzugriff auf Navigation, MR-Aktionen und Erweiterungsfunktionen." },
+  "cardCmdPaletteDesc": { "message": "Cmd+K (Mac) oder Ctrl+K (Win) auf jeder GitLab-Seite. Navigation, MR-Aktionen, Dateisuche nach Name und im Repo oeffnen." },
   "cardStandupTitle": { "message": "Taeglicher Aktivitaetsbericht" },
   "cardStandupDesc": { "message": "Erstellen Sie einen taeglichen Aktivitaetsbericht aus Ihrer GitLab-Aktivitaet. Zeigt erstellte, gemergte und reviewte MRs. Kopieren und in Slack oder Jira einfuegen." },
 

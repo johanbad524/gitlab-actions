@@ -2181,6 +2181,40 @@
       })();
       var _standupEnabled = !!s.show_standup;
 
+      // File search
+      var _defaultBranch = '';
+      var _fileSearchReqId = 0;
+
+      function fetchDefaultBranch(projectPath) {
+        if (_defaultBranch) return;
+        api('GET', '/projects/' + encodeURIComponent(projectPath))
+          .then(function(proj) { _defaultBranch = proj.default_branch || 'main'; })
+          .catch(function() { _defaultBranch = 'main'; });
+      }
+
+      function searchFiles(projectPath, query, cb) {
+        var reqId = ++_fileSearchReqId;
+        var encodedPath = encodeURIComponent(projectPath);
+        api('GET', '/projects/' + encodedPath + '/search?scope=blobs&search=' + encodeURIComponent(query) + '&per_page=20')
+          .then(function(results) {
+            if (reqId !== _fileSearchReqId) return;
+            // Deduplicate by file path
+            var seen = {};
+            var files = [];
+            results.forEach(function(item) {
+              if (item.filename && !seen[item.filename]) {
+                seen[item.filename] = true;
+                files.push(item.filename);
+              }
+            });
+            cb(files);
+          })
+          .catch(function() {
+            if (reqId !== _fileSearchReqId) return;
+            cb([]);
+          });
+      }
+
       function getProjectPath() {
         // Try /-/ pattern first (most GitLab pages)
         var m = window.location.pathname.match(/^\/([^/]+(?:\/[^/]+)*?)\/-\//);
@@ -2367,6 +2401,7 @@
           snippet:  '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M5 4l-3 4 3 4M11 4l3 4-3 4M9 3L7 13"/>',
           pin:      '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M5 3l1 5H4l4 6V9.5h1L11 3z"/>',
           nav:      '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M5 4l4 4-4 4"/>',
+          file:     '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" d="M4 2h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" d="M9 2v4h4"/>',
         };
         return '<svg viewBox="0 0 16 16" class="gl-cmd-palette-item-icon">' + (icons[icon] || icons.action) + '</svg>';
       }
@@ -2374,6 +2409,9 @@
       function openPalette() {
         if (_paletteOpen) return;
         _paletteOpen = true;
+
+        var projectPath = getProjectPath();
+        if (projectPath) fetchDefaultBranch(projectPath);
 
         var cmds = buildCommands();
         var selectedIdx = 0;
@@ -2518,22 +2556,74 @@
           }
         });
 
+        var _fileSearchTimer = null;
+        var _lastFileQuery = '';
+
         input.addEventListener('input', function() {
           var q = input.value.toLowerCase().trim();
           isSearching = !!q;
           if (!q) {
             filtered = cmds.slice();
-          } else {
-            filtered = cmds.filter(function(cmd) {
-              return cmd.label.toLowerCase().indexOf(q) !== -1 ||
-                     (cmd.hint && cmd.hint.toLowerCase().indexOf(q) !== -1) ||
-                     (cmd.group && cmd.group.toLowerCase().indexOf(q) !== -1);
-            });
+            _lastFileQuery = '';
+            renderList();
+            var vis = getVisibleIndices();
+            selectedIdx = vis.length ? vis[0] : 0;
+            renderList();
+            return;
           }
+
+          // Filter commands
+          var cmdResults = cmds.filter(function(cmd) {
+            return cmd.label.toLowerCase().indexOf(q) !== -1 ||
+                   (cmd.hint && cmd.hint.toLowerCase().indexOf(q) !== -1) ||
+                   (cmd.group && cmd.group.toLowerCase().indexOf(q) !== -1);
+          });
+          filtered = cmdResults;
           renderList();
           var vis = getVisibleIndices();
           selectedIdx = vis.length ? vis[0] : 0;
           renderList();
+
+          // File search with debounce (min 2 chars)
+          if (q.length >= 2 && projectPath) {
+            clearTimeout(_fileSearchTimer);
+            _fileSearchTimer = setTimeout(function() {
+              if (!_paletteOpen) return;
+              _lastFileQuery = q;
+              searchFiles(projectPath, q, function(files) {
+                if (!_paletteOpen || input.value.toLowerCase().trim() !== _lastFileQuery) return;
+                if (!files.length) return;
+
+                var fileGroup = msg('cmdGroupFiles');
+                var defaultBranch = _defaultBranch || 'main';
+                var fileCmds = files.map(function(filePath) {
+                  var fileName = filePath.split('/').pop();
+                  return {
+                    id: 'file-' + filePath,
+                    label: fileName,
+                    hint: filePath,
+                    group: fileGroup,
+                    icon: 'file',
+                    action: function() {
+                      window.location.href = '/' + projectPath + '/-/blob/' + encodeURIComponent(defaultBranch) + '/' + filePath;
+                    }
+                  };
+                });
+
+                // Re-filter commands with current query (may have changed)
+                var currentQ = input.value.toLowerCase().trim();
+                var currentCmdResults = cmds.filter(function(cmd) {
+                  return cmd.label.toLowerCase().indexOf(currentQ) !== -1 ||
+                         (cmd.hint && cmd.hint.toLowerCase().indexOf(currentQ) !== -1) ||
+                         (cmd.group && cmd.group.toLowerCase().indexOf(currentQ) !== -1);
+                });
+
+                filtered = currentCmdResults.concat(fileCmds);
+                selectedIdx = 0;
+                renderList();
+              });
+            }, 300);
+          }
         });
 
         listEl.addEventListener('mousemove', function(e) {

@@ -314,6 +314,7 @@
   "cmdGroupNav": { "message": "Навигация" },
   "cmdGroupMr": { "message": "Действия MR" },
   "cmdGroupExt": { "message": "Расширение" },
+  "cmdGroupFiles": { "message": "Файлы" },
 
   "cmdNavMrs": { "message": "Перейти к Merge Requests" },
   "cmdNavIssues": { "message": "Перейти к Issues" },
@@ -347,7 +348,7 @@
   "standupCopied": { "message": "Скопировано!" },
 
   "cardCmdPaletteTitle": { "message": "Командная палитра" },
-  "cardCmdPaletteDesc": { "message": "Нажмите Cmd+K (Mac) или Ctrl+K (Win) на любой странице GitLab для быстрого доступа к навигации, действиям MR и функциям расширения." },
+  "cardCmdPaletteDesc": { "message": "Нажмите Cmd+K (Mac) или Ctrl+K (Win) на любой странице GitLab. Навигация, действия MR, поиск файлов по имени и открытие в репозитории." },
   "cardStandupTitle": { "message": "Отчёт по дневной активности" },
   "cardStandupDesc": { "message": "Генерирует отчёт по вашей активности в GitLab за день. Показывает созданные, смёрженные и отревьюенные MR. Скопируйте и вставьте в Slack или Jira." },
   "showCherryPick": { "message": "Cherry-pick в ветки" },
