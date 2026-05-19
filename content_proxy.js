@@ -1609,6 +1609,514 @@
   }
 
   // =========================================================================
+  // Version bump helpers (shared with content.js)
+  // =========================================================================
+
+  function bumpVersion(version, strategy) {
+    var parts = version.split('.');
+    if (strategy === 'major') {
+      parts[0] = String(parseInt(parts[0]) + 1);
+      for (var i = 1; i < parts.length; i++) parts[i] = '0';
+    } else if (strategy === 'minor') {
+      if (parts.length < 2) parts.push('0');
+      parts[1] = String(parseInt(parts[1]) + 1);
+      for (var i = 2; i < parts.length; i++) parts[i] = '0';
+    } else {
+      parts[parts.length - 1] = String(parseInt(parts[parts.length - 1]) + 1);
+    }
+    return parts.join('.');
+  }
+
+  function getNestedValue(obj, path) {
+    var keys = path.split('.');
+    var val = obj;
+    for (var i = 0; i < keys.length; i++) {
+      if (val == null) return undefined;
+      val = val[keys[i]];
+    }
+    return val;
+  }
+
+  function setNestedValue(obj, path, value) {
+    var keys = path.split('.');
+    var target = obj;
+    for (var i = 0; i < keys.length - 1; i++) {
+      if (target[keys[i]] == null) target[keys[i]] = {};
+      target = target[keys[i]];
+    }
+    target[keys[keys.length - 1]] = value;
+  }
+
+  function parseToml(text) {
+    var result = {};
+    var currentSection = result;
+    var lines = text.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line || line[0] === '#') continue;
+      var sectionMatch = line.match(/^\[([^\]]+)\]$/);
+      if (sectionMatch) {
+        var sectionPath = sectionMatch[1].split('.');
+        currentSection = result;
+        for (var j = 0; j < sectionPath.length; j++) {
+          if (!currentSection[sectionPath[j]]) currentSection[sectionPath[j]] = {};
+          currentSection = currentSection[sectionPath[j]];
+        }
+        continue;
+      }
+      var kvMatch = line.match(/^([^=]+?)\s*=\s*"([^"]*)"$/);
+      if (kvMatch) {
+        currentSection[kvMatch[1].trim()] = kvMatch[2];
+      }
+    }
+    return result;
+  }
+
+  function updateTomlVersion(text, path, newVersion) {
+    var keys = path.split('.');
+    var versionKey = keys[keys.length - 1];
+    var sectionKeys = keys.slice(0, -1);
+    var targetSection = sectionKeys.length > 0 ? '[' + sectionKeys.join('.') + ']' : null;
+    var lines = text.split('\n');
+    var inSection = targetSection === null;
+    var regex = new RegExp('^(\\s*' + versionKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*=\\s*)"[^"]*"');
+    for (var i = 0; i < lines.length; i++) {
+      var trimmed = lines[i].trim();
+      if (trimmed.match(/^\[/)) {
+        inSection = targetSection && trimmed === targetSection;
+      }
+      if (inSection && regex.test(lines[i])) {
+        lines[i] = lines[i].replace(regex, '$1"' + newVersion + '"');
+        return lines.join('\n');
+      }
+    }
+    throw new Error('Could not find "' + path + '" in TOML file');
+  }
+
+  // =========================================================================
+  // Cherry-pick to multiple branches (commits page)
+  // =========================================================================
+
+  function isCommitsPage() {
+    return /\/-\/commits\//.test(window.location.pathname) || /\/-\/repository\/commits\//.test(window.location.pathname);
+  }
+
+  if (isCommitsPage()) {
+    try {
+      chrome.storage.sync.get({ show_cherry_pick: true, cherry_pick_branches: [], cherry_pick_create_mr: true, cherry_pick_smart_fallback: true, cherry_pick_bump_version: false, versionFile: 'package.json', versionPath: 'version', versionStrategy: 'patch', versionCommitTemplate: 'fix: bump version to {version}' }, function(s) {
+        if (chrome.runtime.lastError || s.show_cherry_pick === false) return;
+
+        var projectPath = (function() {
+          var m = window.location.pathname.match(/^\/([^/]+(?:\/[^/]+)*?)\/-\//);
+          return m ? m[1] : null;
+        })();
+        if (!projectPath) return;
+        var encodedProject = encodeURIComponent(projectPath);
+
+        function injectCherryPickButtons() {
+          var shaGroups = document.querySelectorAll('.commit-sha-group');
+          if (!shaGroups.length) return;
+
+          shaGroups.forEach(function(group) {
+            if (group.querySelector('.gl-cherry-pick-btn')) return;
+
+            var shaEl = group.querySelector('[data-clipboard-text], .label-monospace, .commit-sha');
+            var sha = shaEl ? (shaEl.getAttribute('data-clipboard-text') || shaEl.textContent.trim()) : '';
+            if (!sha) return;
+
+            var row = group.closest('.commit, li, [data-testid="commit-item"], .commit-content')
+              || group.parentElement;
+            var msgEl = row ? row.querySelector('.commit-row-message, .item-title a, .commit-title') : null;
+            var commitMsg = msgEl ? msgEl.textContent.trim() : '';
+
+            var btn = document.createElement('button');
+            btn.className = 'gl-cherry-pick-btn gl-button btn btn-icon btn-md btn-default';
+            btn.title = msg('cherryPickTitle');
+            btn.setAttribute('aria-label', msg('cherryPickTitle'));
+            btn.type = 'button';
+            btn.innerHTML = '<svg class="s16 gl-icon gl-button-icon" viewBox="0 0 16 16"><circle cx="8" cy="4" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M8 6v4"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M4 8h8"/></svg>';
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              openCherryPickModal(sha, commitMsg, s);
+            });
+            group.appendChild(btn);
+          });
+        }
+
+        function openCherryPickModal(sha, commitMsg, settings) {
+          var savedBranches = settings.cherry_pick_branches || [];
+          var defaultCreateMr = settings.cherry_pick_create_mr !== false;
+          var defaultSmartFallback = settings.cherry_pick_smart_fallback !== false;
+          var defaultBumpVersion = settings.cherry_pick_bump_version || false;
+          var existing = document.querySelector('.gl-cherry-pick-overlay');
+          if (existing) existing.remove();
+
+          var overlay = document.createElement('div');
+          overlay.className = 'gl-cherry-pick-overlay';
+
+          var modal = document.createElement('div');
+          modal.className = 'gl-cherry-pick-modal';
+
+          var shortSha = sha.substring(0, 8);
+
+          modal.innerHTML =
+            '<div class="gl-cherry-pick-header">' +
+              '<span class="gl-cherry-pick-header-title">' + escHtml(msg('cherryPickTitle')) + ': ' + escHtml(shortSha) + '</span>' +
+              '<button class="gl-cherry-pick-close gl-button btn btn-icon btn-sm btn-default btn-icon-only" type="button" aria-label="Close">' +
+                '<svg class="s16 gl-icon gl-button-icon" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" fill="currentColor"/></svg>' +
+              '</button>' +
+            '</div>' +
+            '<div class="gl-cherry-pick-commit-msg">' + escHtml(commitMsg || sha) + '</div>' +
+            '<div class="gl-cherry-pick-input-row">' +
+              '<input type="text" class="gl-cherry-pick-input gl-form-input form-control" placeholder="' + escHtml(msg('cherryPickBranchPlaceholder')) + '">' +
+              '<button class="gl-button btn btn-default btn-md gl-cherry-pick-add-btn" type="button">' + escHtml(msg('cherryPickBranchAdd')) + '</button>' +
+            '</div>' +
+            '<div class="gl-cherry-pick-branches"></div>' +
+            '<label class="gl-cherry-pick-mr-toggle gl-form-checkbox">' +
+              '<input type="checkbox" class="gl-cherry-pick-mr-checkbox"' + (defaultCreateMr ? ' checked' : '') + '>' +
+              '<span>' + escHtml(msg('cherryPickCreateMr')) + '</span>' +
+            '</label>' +
+            '<label class="gl-cherry-pick-mr-toggle gl-form-checkbox">' +
+              '<input type="checkbox" class="gl-cherry-pick-fallback-checkbox"' + (defaultSmartFallback ? ' checked' : '') + '>' +
+              '<span>' + escHtml(msg('cherryPickSmartFallback')) + '</span>' +
+            '</label>' +
+            '<label class="gl-cherry-pick-mr-toggle gl-form-checkbox">' +
+              '<input type="checkbox" class="gl-cherry-pick-bump-checkbox"' + (defaultBumpVersion ? ' checked' : '') + '>' +
+              '<span>' + escHtml(msg('cherryPickBumpVersion')) + '</span>' +
+            '</label>' +
+            '<div class="gl-cherry-pick-footer">' +
+              '<button class="gl-button btn btn-default btn-md gl-cherry-pick-cancel" type="button">' + escHtml(msg('cherryPickClose')) + '</button>' +
+              '<button class="gl-button btn btn-confirm btn-md gl-cherry-pick-start" type="button">' + escHtml(msg('cherryPickStart')) + '</button>' +
+            '</div>';
+
+          overlay.appendChild(modal);
+
+          var input = modal.querySelector('.gl-cherry-pick-input');
+          var addBtn = modal.querySelector('.gl-cherry-pick-add-btn');
+          var branchList = modal.querySelector('.gl-cherry-pick-branches');
+          var startBtn = modal.querySelector('.gl-cherry-pick-start');
+          var closeBtn = modal.querySelector('.gl-cherry-pick-close');
+          var cancelBtn = modal.querySelector('.gl-cherry-pick-cancel');
+          var mrCheckbox = modal.querySelector('.gl-cherry-pick-mr-checkbox');
+          var fallbackCheckbox = modal.querySelector('.gl-cherry-pick-fallback-checkbox');
+          var bumpCheckbox = modal.querySelector('.gl-cherry-pick-bump-checkbox');
+
+          var branches = [];
+
+          function addBranch(name) {
+            name = name.trim();
+            if (!name) return;
+            for (var i = 0; i < branches.length; i++) {
+              if (branches[i].name === name) return;
+            }
+            branches.push({ name: name, status: 'pending', error: '' });
+            renderBranches();
+          }
+
+          function removeBranch(idx) {
+            if (branches[idx] && branches[idx].status !== 'in_progress') {
+              branches.splice(idx, 1);
+              renderBranches();
+            }
+          }
+
+          function renderBranches() {
+            branchList.innerHTML = '';
+            branches.forEach(function(b, i) {
+              var row = document.createElement('div');
+              row.className = 'gl-cherry-pick-branch-row gl-cherry-pick-status-' + b.status;
+              var statusIcon = '';
+              var _svgPending = '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg>';
+              var _svgProgress = '<svg viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M8 14.5a6.5 6.5 0 100-13 6.5 6.5 0 000 13zM8 16A8 8 0 108 0a8 8 0 000 16z" clip-rule="evenodd"/><path fill="currentColor" d="M8 4a.75.75 0 01.75.75v2.5h2.5a.75.75 0 010 1.5h-3.25A.75.75 0 017.25 8V4.75A.75.75 0 018 4z"/></svg>';
+              var _svgSuccess = '<svg viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 8a8 8 0 1116 0A8 8 0 010 8zm11.7-1.7a1 1 0 00-1.4-1.42L7 8.17 5.7 6.88a1 1 0 00-1.4 1.42l2 2a1 1 0 001.4 0l4-4z" fill="currentColor"/></svg>';
+              var _svgError = '<svg viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 8a8 8 0 1116 0A8 8 0 010 8zm5.3-2.3a.75.75 0 00-1.06 1.06L6.44 8 4.24 10.24a.75.75 0 001.06 1.06L7.5 9.06l2.2 2.24a.75.75 0 001.06-1.06L8.56 8l2.2-2.24a.75.75 0 00-1.06-1.06L7.5 6.94 5.3 4.7z" fill="currentColor"/></svg>';
+              if (b.status === 'pending') statusIcon = '<span class="gl-cherry-pick-status-icon pending">' + _svgPending + '</span>';
+              else if (b.status === 'in_progress') statusIcon = '<span class="gl-cherry-pick-status-icon in-progress">' + _svgProgress + '</span>';
+              else if (b.status === 'success') statusIcon = '<span class="gl-cherry-pick-status-icon success">' + _svgSuccess + '</span>';
+              else if (b.status === 'error') statusIcon = '<span class="gl-cherry-pick-status-icon error" title="' + escHtml(b.error) + '">' + _svgError + '</span>';
+
+              var mrLink = (b.status === 'success' && b.mrUrl) ? '<a href="' + escHtml(b.mrUrl) + '" target="_blank" class="gl-cherry-pick-mr-link">MR</a>' : '';
+
+              row.innerHTML =
+                statusIcon +
+                '<span class="gl-cherry-pick-branch-name">' + escHtml(b.name) + '</span>' +
+                (b.status === 'error' ? '<span class="gl-cherry-pick-error-text">' + escHtml(b.error) + '</span>' : '') +
+                mrLink +
+                '<button class="gl-cherry-pick-remove" data-idx="' + i + '" title="' + escHtml(msg('cherryPickRemove')) + '">&times;</button>';
+              branchList.appendChild(row);
+            });
+
+            branchList.querySelectorAll('.gl-cherry-pick-remove').forEach(function(btn) {
+              btn.addEventListener('click', function() {
+                removeBranch(parseInt(btn.dataset.idx));
+              });
+            });
+          }
+
+          (savedBranches || []).forEach(function(b) { addBranch(b); });
+
+          addBtn.addEventListener('click', function() {
+            addBranch(input.value);
+            input.value = '';
+            input.focus();
+          });
+
+          input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addBranch(input.value);
+              input.value = '';
+            }
+          });
+
+          var _running = false;
+
+          startBtn.addEventListener('click', function() {
+            if (_running) return;
+            var hasPending = false;
+            for (var k = 0; k < branches.length; k++) {
+              if (branches[k].status === 'pending' || branches[k].status === 'error') { hasPending = true; break; }
+            }
+            if (!hasPending) return;
+
+            _running = true;
+            startBtn.disabled = true;
+            startBtn.textContent = msg('cherryPickInProgress');
+
+            branches.forEach(function(b) {
+              if (b.status === 'error') { b.status = 'pending'; b.error = ''; }
+            });
+            renderBranches();
+
+            // Fallback: replay commit via Commits API, excluding version file
+            function doFallbackCommit(commitBranch, targetForBump) {
+              return Promise.all([
+                api('GET', '/projects/' + encodedProject + '/repository/commits/' + sha),
+                api('GET', '/projects/' + encodedProject + '/repository/commits/' + sha + '/diff')
+              ]).then(function(results) {
+                var commitInfo = results[0];
+                var diffs = results[1];
+                var versionFile = settings.versionFile || 'package.json';
+
+                // Filter out version file
+                var filtered = diffs.filter(function(d) { return d.new_path !== versionFile && d.old_path !== versionFile; });
+                if (!filtered.length) throw new Error('No files left after excluding ' + versionFile);
+
+                // Build actions from diffs
+                var filePromises = filtered.map(function(d) {
+                  if (d.deleted_file) {
+                    return Promise.resolve({ action: 'delete', file_path: d.new_path });
+                  }
+                  // For new or updated files, get content from the original commit
+                  return api('GET', '/projects/' + encodedProject + '/repository/files/' + encodeURIComponent(d.new_path) + '?ref=' + sha)
+                    .then(function(file) {
+                      return {
+                        action: d.new_file ? 'create' : 'update',
+                        file_path: d.new_path,
+                        content: file.content,
+                        encoding: 'base64'
+                      };
+                    });
+                });
+
+                return Promise.all(filePromises).then(function(actions) {
+                  // Optionally bump version in the same commit
+                  if (!bumpCheckbox.checked) {
+                    var commitMsg = (commitInfo.message || '') + '\n\n(cherry picked from commit ' + sha + ')';
+                    return api('POST', '/projects/' + encodedProject + '/repository/commits', {
+                      branch: commitBranch,
+                      commit_message: commitMsg,
+                      actions: actions,
+                      author_name: commitInfo.author_name,
+                      author_email: commitInfo.author_email
+                    });
+                  }
+
+                  var vFile = settings.versionFile || 'package.json';
+                  var vPath = settings.versionPath || 'version';
+                  var strategy = settings.versionStrategy || 'patch';
+
+                  return api('GET', '/projects/' + encodedProject + '/repository/files/' + encodeURIComponent(vFile) + '?ref=' + encodeURIComponent(targetForBump))
+                    .then(function(file) {
+                      var rawContent = decodeURIComponent(escape(atob(file.content)));
+                      var currentVersion, newContent, newVersion;
+                      var isToml = vFile.indexOf('.toml') !== -1;
+                      var isPlainText = vFile.indexOf('.txt') !== -1;
+
+                      if (isPlainText) {
+                        currentVersion = rawContent.trim();
+                        newVersion = bumpVersion(currentVersion, strategy);
+                        newContent = newVersion + '\n';
+                      } else if (isToml) {
+                        var parsed = parseToml(rawContent);
+                        currentVersion = getNestedValue(parsed, vPath);
+                        if (!currentVersion) throw new Error('Version not found at ' + vPath);
+                        newVersion = bumpVersion(currentVersion, strategy);
+                        newContent = updateTomlVersion(rawContent, vPath, newVersion);
+                      } else {
+                        var json = JSON.parse(rawContent);
+                        currentVersion = getNestedValue(json, vPath);
+                        if (!currentVersion) throw new Error('Version not found at ' + vPath);
+                        newVersion = bumpVersion(currentVersion, strategy);
+                        setNestedValue(json, vPath, newVersion);
+                        newContent = JSON.stringify(json, null, 2) + '\n';
+                      }
+
+                      // Add version file update to the same actions array
+                      actions.push({
+                        action: 'update',
+                        file_path: vFile,
+                        content: btoa(unescape(encodeURIComponent(newContent))),
+                        encoding: 'base64'
+                      });
+
+                      var commitMsg = (commitInfo.message || '') + '\n\n(cherry picked from commit ' + sha + ')';
+                      return api('POST', '/projects/' + encodedProject + '/repository/commits', {
+                        branch: commitBranch,
+                        commit_message: commitMsg,
+                        actions: actions,
+                        author_name: commitInfo.author_name,
+                        author_email: commitInfo.author_email
+                      });
+                    });
+                });
+              });
+            }
+
+            var idx = 0;
+            function processNext() {
+              while (idx < branches.length && branches[idx].status !== 'pending') idx++;
+              if (idx >= branches.length) {
+                _running = false;
+                startBtn.disabled = false;
+                startBtn.textContent = msg('cherryPickStart');
+                var successCount = 0;
+                var errorCount = 0;
+                branches.forEach(function(b) {
+                  if (b.status === 'success') successCount++;
+                  if (b.status === 'error') errorCount++;
+                });
+                if (errorCount === 0 && successCount > 0) {
+                  var toastMsg;
+                  try { toastMsg = chrome.i18n.getMessage('cherryPickAllSuccess', [String(successCount)]); } catch(e) { toastMsg = ''; }
+                  if (!toastMsg) toastMsg = 'Cherry-picked to ' + successCount + ' branches';
+                  showToast(toastMsg, 'success');
+                }
+                return;
+              }
+
+              branches[idx].status = 'in_progress';
+              renderBranches();
+
+              var createMr = mrCheckbox.checked;
+              var useFallback = fallbackCheckbox.checked;
+              var targetBranch = branches[idx].name;
+              var currentIdx = idx;
+
+              // Determine the branch to commit into
+              var commitBranch = targetBranch;
+              var mrBranch = null;
+              if (createMr) {
+                mrBranch = 'cherry-pick-' + shortSha + '-into-' + targetBranch.replace(/\//g, '-');
+                commitBranch = mrBranch;
+              }
+
+              // Step 1: create branch if MR mode
+              var branchPromise = createMr
+                ? api('POST', '/projects/' + encodedProject + '/repository/branches', { branch: mrBranch, ref: targetBranch })
+                : Promise.resolve();
+
+              branchPromise.then(function() {
+                // Step 2: try cherry-pick
+                return api('POST', '/projects/' + encodedProject + '/repository/commits/' + sha + '/cherry_pick', {
+                  branch: commitBranch
+                });
+              }).catch(function(cherryPickErr) {
+                // Cherry-pick failed — try fallback if enabled
+                if (!useFallback) throw cherryPickErr;
+
+                // If MR mode and branch was already created, delete it and recreate
+                var cleanupPromise = createMr
+                  ? api('DELETE', '/projects/' + encodedProject + '/repository/branches/' + encodeURIComponent(mrBranch)).catch(function() {})
+                      .then(function() { return api('POST', '/projects/' + encodedProject + '/repository/branches', { branch: mrBranch, ref: targetBranch }); })
+                  : Promise.resolve();
+
+                return cleanupPromise.then(function() {
+                  return doFallbackCommit(commitBranch, targetBranch);
+                });
+              }).then(function() {
+                // Step 3: create MR if requested
+                if (!createMr) return;
+                return api('POST', '/projects/' + encodedProject + '/merge_requests', {
+                  source_branch: mrBranch,
+                  target_branch: targetBranch,
+                  title: 'Cherry-pick ' + shortSha + ' into ' + targetBranch,
+                  remove_source_branch: true
+                });
+              }).then(function(mr) {
+                branches[currentIdx].status = 'success';
+                if (mr && mr.web_url) branches[currentIdx].mrUrl = mr.web_url;
+                renderBranches();
+                idx++;
+                processNext();
+              }).catch(function(err) {
+                branches[currentIdx].status = 'error';
+                branches[currentIdx].error = err.message || String(err);
+                renderBranches();
+                idx++;
+                processNext();
+              });
+            }
+
+            processNext();
+          });
+
+          function closeModal() {
+            overlay.remove();
+            document.removeEventListener('keydown', onKey);
+          }
+
+          function onKey(e) {
+            if (e.key === 'Escape') closeModal();
+          }
+
+          closeBtn.addEventListener('click', closeModal);
+          cancelBtn.addEventListener('click', closeModal);
+          overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeModal();
+          });
+          document.addEventListener('keydown', onKey);
+
+          document.body.appendChild(overlay);
+          input.focus();
+        }
+
+        function showToast(message, type) {
+          var existing = document.querySelectorAll('.gl-mr-actions-toast');
+          existing.forEach(function(el) { el.remove(); });
+          var toast = document.createElement('div');
+          toast.className = 'gl-mr-actions-toast ' + type;
+          toast.textContent = message;
+          document.body.appendChild(toast);
+          setTimeout(function() { try { toast.remove(); } catch(e) {} }, 5000);
+        }
+
+        // Inject immediately + observe for SPA navigation
+        injectCherryPickButtons();
+
+        var _cpTimer = null;
+        var cpObserver = new MutationObserver(function() {
+          clearTimeout(_cpTimer);
+          _cpTimer = setTimeout(injectCherryPickButtons, 300);
+        });
+        cpObserver.observe(document.body, { childList: true, subtree: true });
+        window.addEventListener('beforeunload', function() { cpObserver.disconnect(); });
+      });
+    } catch(e) {}
+  }
+
+  // =========================================================================
   // Collapse top bars (#63)
   // =========================================================================
 

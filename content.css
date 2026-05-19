@@ -1617,3 +1617,167 @@ li.gl-mr-ext-threads-badge {
   padding: 16px;
   text-align: center;
 }
+
+/* ====================================================================
+   Cherry-pick to multiple branches
+   ==================================================================== */
+
+/* Cherry-pick button — native GitLab classes on the element itself */
+.gl-cherry-pick-btn.gl-button svg { pointer-events: none; }
+
+/* Overlay — reuse GitLab modal backdrop pattern */
+.gl-cherry-pick-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--gl-overlay-bg-color, rgba(0,0,0,0.5));
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal container */
+.gl-cherry-pick-modal {
+  background: var(--gl-background-color-default, #fff);
+  border: 1px solid var(--gl-border-color-default, #dcdcde);
+  border-radius: var(--gl-border-radius-base, 0.25rem);
+  box-shadow: 0 4px 12px var(--gl-overlay-bg-color, rgba(0,0,0,0.3));
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--gl-text-color-default, #303030);
+  font-size: var(--gl-font-size, 0.875rem);
+}
+
+/* Header */
+.gl-cherry-pick-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gl-spacing-5, 1rem) var(--gl-spacing-5, 1rem);
+  border-bottom: 1px solid var(--gl-border-color-default, #dcdcde);
+}
+.gl-cherry-pick-header-title {
+  font-weight: var(--gl-font-weight-bold, 600);
+  font-size: var(--gl-font-size-h2, 1rem);
+}
+
+/* Commit message subtitle */
+.gl-cherry-pick-commit-msg {
+  padding: var(--gl-spacing-4, 0.75rem) var(--gl-spacing-5, 1rem);
+  color: var(--gl-text-color-secondary, #666);
+  border-bottom: 1px solid var(--gl-border-color-default, #dcdcde);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Input row */
+.gl-cherry-pick-input-row {
+  display: flex;
+  gap: var(--gl-spacing-3, 0.5rem);
+  padding: var(--gl-spacing-5, 1rem) var(--gl-spacing-5, 1rem) var(--gl-spacing-3, 0.5rem);
+}
+.gl-cherry-pick-input-row .gl-cherry-pick-add-btn {
+  flex-shrink: 0;
+}
+.gl-cherry-pick-input-row .gl-cherry-pick-input {
+  background-color: transparent;
+  color: inherit;
+}
+
+/* Branch list */
+.gl-cherry-pick-branches {
+  padding: var(--gl-spacing-3, 0.5rem) var(--gl-spacing-5, 1rem);
+  overflow-y: auto;
+  max-height: 300px;
+  flex: 1;
+}
+.gl-cherry-pick-branch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gl-spacing-3, 0.5rem);
+  padding: var(--gl-spacing-3, 0.5rem);
+  border-radius: var(--gl-border-radius-base, 0.25rem);
+  margin-bottom: var(--gl-spacing-2, 0.25rem);
+  background: var(--gl-background-color-subtle, #fafafa);
+  border: 1px solid var(--gl-border-color-default, #ececec);
+}
+.gl-cherry-pick-branch-name {
+  flex: 1;
+  font-family: var(--gl-monospace-font, 'Menlo', monospace);
+  font-size: var(--gl-font-size-sm, 0.75rem);
+}
+.gl-cherry-pick-error-text {
+  font-size: var(--gl-font-size-sm, 0.75rem);
+  color: var(--gl-theme-red-500, #dd2b0e);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gl-cherry-pick-remove {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--gl-text-color-secondary, #89888d);
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.gl-cherry-pick-remove:hover { color: var(--gl-theme-red-500, #dd2b0e); }
+
+/* Status icons — inline SVGs matching GitLab CI icons */
+.gl-cherry-pick-status-icon { display: inline-flex; flex-shrink: 0; }
+.gl-cherry-pick-status-icon svg { width: 18px; height: 18px; }
+.gl-cherry-pick-status-icon.pending svg { color: var(--gl-text-color-secondary, #89888d); }
+.gl-cherry-pick-status-icon.in-progress svg { color: var(--gl-theme-blue-500, #1f75cb); animation: ext-spin 0.8s linear infinite; }
+.gl-cherry-pick-status-icon.success svg { color: var(--gl-theme-green-500, #108548); }
+.gl-cherry-pick-status-icon.error svg { color: var(--gl-theme-red-500, #dd2b0e); }
+
+/* Status row coloring */
+.gl-cherry-pick-status-success {
+  border-color: var(--gl-theme-green-200, rgba(16,133,72,0.3));
+  background: var(--gl-theme-green-50, rgba(16,133,72,0.05));
+}
+.gl-cherry-pick-status-error {
+  border-color: var(--gl-theme-red-200, rgba(221,43,14,0.3));
+  background: var(--gl-theme-red-50, rgba(221,43,14,0.05));
+}
+
+/* MR toggle checkbox */
+.gl-cherry-pick-mr-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--gl-spacing-3, 0.5rem);
+  padding: var(--gl-spacing-2, 0.25rem) var(--gl-spacing-5, 1rem) var(--gl-spacing-3, 0.5rem);
+  cursor: pointer;
+}
+
+/* MR link badge */
+.gl-cherry-pick-mr-link {
+  font-size: var(--gl-font-size-sm, 0.75rem);
+  font-weight: var(--gl-font-weight-bold, 600);
+  color: var(--gl-theme-blue-500, #1f75cb);
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: var(--gl-border-radius-base, 0.25rem);
+  background: var(--gl-theme-blue-50, rgba(31,117,203,0.1));
+  flex-shrink: 0;
+}
+.gl-cherry-pick-mr-link:hover {
+  background: var(--gl-theme-blue-100, rgba(31,117,203,0.2));
+}
+
+/* Footer buttons — use GitLab spacing */
+.gl-cherry-pick-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gl-spacing-3, 0.5rem);
+  padding: var(--gl-spacing-4, 0.75rem) var(--gl-spacing-5, 1rem);
+  border-top: 1px solid var(--gl-border-color-default, #dcdcde);
+}

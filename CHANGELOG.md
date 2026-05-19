@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+### New features
+- **Cherry-pick to multiple branches** — cherry-pick any commit to multiple branches at once from the commits page. Button next to each commit SHA. Modal with branch selection, real-time status per branch (success/conflict). Option to create a merge request for each cherry-pick (like native GitLab). Save default target branches in settings.
+- **Smart cherry-pick fallback** — when cherry-pick fails due to version file conflicts, automatically replays the commit via Commits API excluding the version file, preserving original author. Optional version bump in the target branch after cherry-pick. Both features configurable per-operation and in settings.
+
+---
+
 ## 1.6.0
 
 ### New features

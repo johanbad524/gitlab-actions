@@ -95,6 +95,11 @@ var DEFAULTS = Object.assign({}, BUTTON_DEFAULTS, {
   hide_right_sidebar: false,
   show_cmd_palette: true,
   show_standup: true,
+  show_cherry_pick: true,
+  cherry_pick_branches: [],
+  cherry_pick_create_mr: true,
+  cherry_pick_smart_fallback: true,
+  cherry_pick_bump_version: false,
   jira_url: '',
   jira_ticket_regex: '',
   quickComments: [],
@@ -240,6 +245,17 @@ function renderDefaultTab(container) {
     '<div class="toggle"><input type="checkbox" id="hide_right_sidebar"><label for="hide_right_sidebar">' + escHtml(t('hideRightSidebar')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="show_cmd_palette"><label for="show_cmd_palette">' + escHtml(t('showCmdPalette')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="show_standup"><label for="show_standup">' + escHtml(t('showStandup')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_cherry_pick"><label for="show_cherry_pick">' + escHtml(t('showCherryPick')) + '</label></div>' +
+    '<div class="sep"></div>' +
+    '<h4>' + escHtml(t('cherryPickBranches')) + '</h4>' +
+    '<div class="hint" style="margin-bottom:8px">' + escHtml(t('cherryPickBranchesHint')) + '</div>' +
+    '<div class="toggle" style="margin-bottom:8px"><input type="checkbox" id="cherry_pick_create_mr"><label for="cherry_pick_create_mr">' + escHtml(t('cherryPickCreateMrDefault')) + '</label></div>' +
+    '<div class="toggle" style="margin-bottom:8px"><input type="checkbox" id="cherry_pick_smart_fallback"><label for="cherry_pick_smart_fallback">' + escHtml(t('cherryPickSmartFallback')) + '</label></div>' +
+    '<div class="hint" style="margin-bottom:8px">' + escHtml(t('cherryPickSmartFallbackHint')) + '</div>' +
+    '<div class="toggle" style="margin-bottom:8px"><input type="checkbox" id="cherry_pick_bump_version"><label for="cherry_pick_bump_version">' + escHtml(t('cherryPickBumpVersion')) + '</label></div>' +
+    '<div class="hint" style="margin-bottom:8px">' + escHtml(t('cherryPickBumpVersionHint')) + '</div>' +
+    '<div id="cherryPickBranchesList"></div>' +
+    '<button type="button" id="addCherryPickBranch" class="add-btn">+ ' + escHtml(t('cherryPickBranchAdd')) + '</button>' +
     '<div class="sep"></div>' +
     '<h4>' + escHtml(t('jiraIntegration')) + '</h4>' +
     '<div class="field"><label>' + escHtml(t('jiraUrl')) + '</label><input type="text" id="jira_url" placeholder="https://jira.company.com"><div class="hint">' + escHtml(t('jiraUrlHint')) + '</div></div>' +
@@ -314,6 +330,14 @@ function renderDefaultTab(container) {
   document.getElementById('hide_right_sidebar').checked = allData.hide_right_sidebar || false;
   document.getElementById('show_cmd_palette').checked = allData.show_cmd_palette !== false;
   document.getElementById('show_standup').checked = allData.show_standup !== false;
+  document.getElementById('show_cherry_pick').checked = allData.show_cherry_pick !== false;
+  document.getElementById('cherry_pick_create_mr').checked = allData.cherry_pick_create_mr !== false;
+  document.getElementById('cherry_pick_smart_fallback').checked = allData.cherry_pick_smart_fallback !== false;
+  document.getElementById('cherry_pick_bump_version').checked = allData.cherry_pick_bump_version || false;
+  renderCherryPickBranches(allData.cherry_pick_branches || []);
+  document.getElementById('addCherryPickBranch').addEventListener('click', function() {
+    addCherryPickBranchRow('');
+  });
   document.getElementById('jira_url').value = allData.jira_url || '';
   document.getElementById('jira_ticket_regex').value = allData.jira_ticket_regex || '';
   document.getElementById('show_jira_details').checked = allData.show_jira_details || false;
@@ -735,6 +759,38 @@ function getQuickCommentsFromUI() {
   return comments;
 }
 
+// Cherry-pick branches
+function renderCherryPickBranches(branches) {
+  var list = document.getElementById('cherryPickBranchesList');
+  list.innerHTML = '';
+  (branches || []).forEach(function(b) {
+    addCherryPickBranchRow(b);
+  });
+}
+
+function addCherryPickBranchRow(branch) {
+  var list = document.getElementById('cherryPickBranchesList');
+  var row = document.createElement('div');
+  row.className = 'cherry-pick-branch-row';
+  row.innerHTML =
+    '<div class="jqa-row field">' +
+      '<input type="text" data-field="branch" placeholder="test-branch" value="' + escHtml(branch) + '" style="flex:1">' +
+      '<span class="remove-btn" title="Remove">&times;</span>' +
+    '</div>';
+  row.querySelector('.remove-btn').addEventListener('click', function() { row.remove(); });
+  list.appendChild(row);
+}
+
+function getCherryPickBranchesFromUI() {
+  var rows = document.querySelectorAll('#cherryPickBranchesList .cherry-pick-branch-row');
+  var branches = [];
+  rows.forEach(function(row) {
+    var branch = row.querySelector('[data-field="branch"]').value.trim();
+    if (branch) branches.push(branch);
+  });
+  return branches;
+}
+
 function getCustomJobsFromUI(listId) {
   var rows = document.querySelectorAll('#' + listId + ' .custom-job');
   var jobs = [];
@@ -800,6 +856,11 @@ function saveDefaultTab() {
   settings.hide_right_sidebar = document.getElementById('hide_right_sidebar').checked;
   settings.show_cmd_palette = document.getElementById('show_cmd_palette').checked;
   settings.show_standup = document.getElementById('show_standup').checked;
+  settings.show_cherry_pick = document.getElementById('show_cherry_pick').checked;
+  settings.cherry_pick_create_mr = document.getElementById('cherry_pick_create_mr').checked;
+  settings.cherry_pick_smart_fallback = document.getElementById('cherry_pick_smart_fallback').checked;
+  settings.cherry_pick_bump_version = document.getElementById('cherry_pick_bump_version').checked;
+  settings.cherry_pick_branches = getCherryPickBranchesFromUI();
   var newJiraUrl = (document.getElementById('jira_url').value || '').trim().replace(/\/+$/, '');
   if (newJiraUrl && newJiraUrl !== allData.jira_url) {
     // Request host permission for Jira domain
