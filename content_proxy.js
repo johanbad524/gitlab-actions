@@ -1659,4 +1659,505 @@
     });
   } catch(e) {}
 
+  // =========================================================================
+  // Command Palette (Cmd+K)
+  // =========================================================================
+
+  try {
+    chrome.storage.sync.get({ show_cmd_palette: true, show_standup: true }, function(s) {
+      if (chrome.runtime.lastError || !s.show_cmd_palette) return;
+
+      var _paletteOpen = false;
+      var _paletteCollapsed = (function() {
+        try { return JSON.parse(sessionStorage.getItem('gl-cmd-palette-collapsed')) || {}; } catch(e) { return {}; }
+      })();
+      var _standupEnabled = !!s.show_standup;
+
+      function getProjectPath() {
+        // Try /-/ pattern first (most GitLab pages)
+        var m = window.location.pathname.match(/^\/([^/]+(?:\/[^/]+)*?)\/-\//);
+        if (m) return m[1];
+        // Fallback: detect from GitLab sidebar or body data
+        var projectLink = document.querySelector('[data-testid="sidebar-menu-link"][href*="/-/"]');
+        if (projectLink) {
+          var hm = projectLink.getAttribute('href').match(/^\/([^/]+(?:\/[^/]+)*?)\/-\//);
+          if (hm) return hm[1];
+        }
+        // Fallback: body data-project-full-path
+        var body = document.body;
+        if (body && body.dataset.projectFullPath) return body.dataset.projectFullPath;
+        // Fallback: breadcrumbs / header meta
+        var breadcrumb = document.querySelector('[data-testid="breadcrumb-links"] a[href*="/-/"], .breadcrumbs-list a[href*="/-/"]');
+        if (breadcrumb) {
+          var bm = breadcrumb.getAttribute('href').match(/^\/([^/]+(?:\/[^/]+)*?)\/-\//);
+          if (bm) return bm[1];
+        }
+        // Last resort: 2-segment path like /namespace/project
+        var pm = window.location.pathname.match(/^\/([^/]+\/[^/]+)\/?$/);
+        if (pm) return pm[1];
+        return '';
+      }
+
+      function parseSidebarLink(a) {
+        var href = a.getAttribute('href');
+        if (!href) return null;
+        var clone = a.cloneNode(true);
+        // Remove badges, counts, avatars
+        var junk = clone.querySelectorAll('[class*="badge"], [class*="count"], .badge, .count, span[aria-label], [class*="avatar"], img, .gl-avatar');
+        junk.forEach(function(b) { b.remove(); });
+        var text = (clone.textContent || '').trim();
+        if (!text) return null;
+        // Find parent section name by walking up the DOM
+        var section = '';
+        var el = a.parentElement;
+        while (el && !el.matches('[data-testid="super-sidebar"], .sidebar-top-level-items, body')) {
+          // Super Sidebar: sections are li/div with a direct child <button> (expander)
+          var sBtn = el.querySelector(':scope > button');
+          if (sBtn && sBtn !== a) {
+            var sClone = sBtn.cloneNode(true);
+            var sJunk = sClone.querySelectorAll('[class*="badge"], [class*="count"], [class*="avatar"], img, svg, .gl-avatar');
+            sJunk.forEach(function(b) { b.remove(); });
+            var sTxt = (sClone.textContent || '').trim();
+            if (sTxt && sTxt !== text) { section = sTxt; break; }
+          }
+          // Old sidebar: top-level li > a is section header
+          var sLink = el.querySelector(':scope > a');
+          if (sLink && sLink !== a && el.querySelector('.sidebar-sub-level-items')) {
+            var lClone = sLink.cloneNode(true);
+            var lJunk = lClone.querySelectorAll('[class*="badge"], [class*="count"], [class*="avatar"], img, svg');
+            lJunk.forEach(function(b) { b.remove(); });
+            var lTxt = (lClone.textContent || '').trim();
+            if (lTxt && lTxt !== text) { section = lTxt; break; }
+          }
+          el = el.parentElement;
+        }
+        var label = section && section !== text ? section + ' - ' + text : text;
+        return { label: label, href: href };
+      }
+
+      function getSidebarLinks() {
+        var pinned = [];
+        var nav = [];
+        var seenHrefs = {};
+
+        // Pinned items
+        var pinEls = document.querySelectorAll('[data-testid="pinned-nav-items"] a[href]');
+        pinEls.forEach(function(a) {
+          var item = parseSidebarLink(a);
+          if (item) {
+            pinned.push(item);
+            seenHrefs[item.href.split('?')[0]] = true;
+          }
+        });
+
+        // All other sidebar links (skip pinned duplicates)
+        var navEls = document.querySelectorAll('[data-testid="super-sidebar"] nav a[href], [data-testid="super-sidebar"] [data-testid="nav-item"] a[href], .sidebar-top-level-items > li > a[href], .sidebar-sub-level-items a[href]');
+        navEls.forEach(function(a) {
+          var item = parseSidebarLink(a);
+          if (!item) return;
+          var cleanHref = item.href.split('?')[0];
+          if (seenHrefs[cleanHref]) return;
+          seenHrefs[cleanHref] = true;
+          nav.push(item);
+        });
+
+        return { pinned: pinned, nav: nav };
+      }
+
+      function isCurrentPath(path) {
+        var current = window.location.pathname.replace(/\/$/, '');
+        var target = path.replace(/\/$/, '');
+        return current === target;
+      }
+
+      function buildCommands() {
+        var cmds = [];
+        var projectPath = getProjectPath();
+        var currentPath = window.location.pathname;
+        var isMrDetail = /\/-\/merge_requests\/\d+/.test(currentPath);
+
+        // Read all sidebar links
+        var sidebar = getSidebarLinks();
+        var hasSidebar = sidebar.pinned.length > 0 || sidebar.nav.length > 0;
+
+        // Pinned items first
+        sidebar.pinned.forEach(function(pin, i) {
+          var pinPath = pin.href.split('?')[0];
+          if (!isCurrentPath(pinPath)) {
+            cmds.push({ id: 'pin-' + i, label: pin.label, group: msg('cmdGroupPinned'), icon: 'pin', action: function() { window.location.href = pin.href; } });
+          }
+        });
+
+        // All other sidebar navigation
+        sidebar.nav.forEach(function(item, i) {
+          var itemPath = item.href.split('?')[0];
+          if (!isCurrentPath(itemPath)) {
+            cmds.push({ id: 'nav-' + i, label: item.label, group: msg('cmdGroupNav'), icon: 'nav', action: function() { window.location.href = item.href; } });
+          }
+        });
+
+        // Fallback navigation if sidebar not found (old GitLab versions)
+        if (!hasSidebar && projectPath) {
+          var fallbackNav = [
+            { label: msg('cmdNavRepo'),      path: '/' + projectPath },
+            { label: msg('cmdNavMrs'),       path: '/' + projectPath + '/-/merge_requests' },
+            { label: msg('cmdNavIssues'),    path: '/' + projectPath + '/-/issues' },
+            { label: msg('cmdNavPipelines'), path: '/' + projectPath + '/-/pipelines' },
+            { label: msg('cmdNavBranches'),  path: '/' + projectPath + '/-/branches' },
+            { label: msg('cmdNavTags'),      path: '/' + projectPath + '/-/tags' },
+            { label: msg('cmdNavCommits'),   path: '/' + projectPath + '/-/commits' },
+            { label: msg('cmdNavWiki'),      path: '/' + projectPath + '/-/wikis' },
+            { label: msg('cmdNavSnippets'),  path: '/' + projectPath + '/-/snippets' },
+            { label: msg('cmdNavSettings'),  path: '/' + projectPath + '/-/settings' },
+          ];
+          fallbackNav.forEach(function(item, i) {
+            if (!isCurrentPath(item.path)) {
+              cmds.push({ id: 'nav-' + i, label: item.label, group: msg('cmdGroupNav'), icon: 'nav', action: function() { window.location.href = item.path; } });
+            }
+          });
+        }
+
+        // Copy project path
+        if (projectPath) {
+          cmds.push({ id: 'copy-path', label: msg('cmdCopyPath'), hint: projectPath, group: msg('cmdGroupNav'), icon: 'copy', action: function() { navigator.clipboard.writeText(projectPath); } });
+        }
+
+        // MR actions (only on MR detail page — read available actions from content.js)
+        if (isMrDetail && window.__glMrActionsLoaded && window.__glMrPaletteActions) {
+          window.__glMrPaletteActions.forEach(function(a) {
+            cmds.push({ id: a.id, label: a.label, group: msg('cmdGroupMr'), icon: a.icon || 'action', action: function() {
+              window.postMessage({ type: 'gl-mr-ext-palette-action', actionId: a.id }, '*');
+            }});
+          });
+        }
+
+        // Extension commands
+        cmds.push({ id: 'ext-settings', label: msg('cmdExtSettings'), group: msg('cmdGroupExt'), icon: 'settings', action: function() { chrome.runtime.sendMessage({ type: 'open-options' }); } });
+
+        // Standup
+        if (_standupEnabled) {
+          cmds.push({ id: 'ext-standup', label: msg('cmdExtStandup'), group: msg('cmdGroupExt'), icon: 'standup', action: function() { openStandupModal(); } });
+        }
+
+        return cmds;
+      }
+
+      function getIconSvg(icon) {
+        var icons = {
+          mr:       '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M5 3v10M11 3v10M5 8h6"/>',
+          issue:    '<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M8 5v3.5l2.5 1.5"/>',
+          pipe:     '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M2 8h4M10 8h4"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+          branch:   '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M5 3v6c0 2 2 3 4 3h2M11 9v4M11 9l-2-2M11 9l2-2"/>',
+          repo:     '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M3 12V4a1 1 0 011-1h8a1 1 0 011 1v8M3 12h10a1 1 0 001-1V4M3 12a1 1 0 001 1h9"/>',
+          copy:     '<rect x="5" y="5" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1.3" d="M11 5V4a1 1 0 00-1-1H4a1 1 0 00-1 1v6a1 1 0 001 1h1"/>',
+          action:   '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M13 3L6.5 9.5M13 3h-4M13 3v4M6 4H4a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1v-2"/>',
+          settings: '<circle cx="8" cy="8" r="2.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1.3" d="M8 2v2M8 12v2M2 8h2M12 8h2M3.8 3.8l1.4 1.4M10.8 10.8l1.4 1.4M3.8 12.2l1.4-1.4M10.8 5.2l1.4-1.4"/>',
+          standup:  '<rect x="3" y="2" width="10" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M6 5h4M6 8h4M6 11h2"/>',
+          tag:      '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M2 8.5V3.5a1 1 0 011-1h5l5.5 5.5-5 5z"/><circle cx="5.5" cy="5.5" r="1" fill="currentColor"/>',
+          commit:   '<circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M8 2v3M8 11v3"/>',
+          wiki:     '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M3 13V3h4l1 2h5v8z"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M6 7h4M6 9.5h3"/>',
+          snippet:  '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M5 4l-3 4 3 4M11 4l3 4-3 4M9 3L7 13"/>',
+          pin:      '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M5 3l1 5H4l4 6V9.5h1L11 3z"/>',
+          nav:      '<path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M5 4l4 4-4 4"/>',
+        };
+        return '<svg viewBox="0 0 16 16" class="gl-cmd-palette-item-icon">' + (icons[icon] || icons.action) + '</svg>';
+      }
+
+      function openPalette() {
+        if (_paletteOpen) return;
+        _paletteOpen = true;
+
+        var cmds = buildCommands();
+        var selectedIdx = 0;
+        var filtered = cmds.slice();
+
+        var overlay = document.createElement('div');
+        overlay.className = 'gl-cmd-palette-overlay';
+
+        var modal = document.createElement('div');
+        modal.className = 'gl-cmd-palette';
+
+        modal.innerHTML =
+          '<div class="gl-cmd-palette-input-wrap">' +
+            '<svg viewBox="0 0 16 16" class="gl-cmd-palette-icon"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M10.5 10.5l3 3"/></svg>' +
+            '<input type="text" class="gl-cmd-palette-input" placeholder="' + escHtml(msg('cmdPlaceholder')) + '">' +
+          '</div>' +
+          '<div class="gl-cmd-palette-list"></div>' +
+          '<div class="gl-cmd-palette-footer">' +
+            '<span><kbd>&uarr;&darr;</kbd> ' + escHtml(msg('cmdFooterNavigate')) + '</span>' +
+            '<span><kbd>Enter</kbd> ' + escHtml(msg('cmdFooterSelect')) + '</span>' +
+            '<span><kbd>Esc</kbd> ' + escHtml(msg('cmdFooterClose')) + '</span>' +
+          '</div>';
+
+        overlay.appendChild(modal);
+
+        var input = modal.querySelector('.gl-cmd-palette-input');
+        var listEl = modal.querySelector('.gl-cmd-palette-list');
+
+        var isSearching = false;
+
+        function renderList() {
+          var html = '';
+          var lastGroup = '';
+          var groupItems = {};
+          // Group items
+          filtered.forEach(function(cmd, i) {
+            var g = cmd.group || '';
+            if (!groupItems[g]) groupItems[g] = [];
+            groupItems[g].push({ cmd: cmd, idx: i });
+          });
+          // Render groups in order
+          var renderedGroups = [];
+          filtered.forEach(function(cmd) {
+            var g = cmd.group || '';
+            if (renderedGroups.indexOf(g) !== -1) return;
+            renderedGroups.push(g);
+            var items = groupItems[g];
+            var collapsed = !isSearching && _paletteCollapsed[g];
+            html += '<div class="gl-cmd-palette-group' + (collapsed ? ' collapsed' : '') + '" data-group="' + escHtml(g) + '">' +
+              '<svg viewBox="0 0 16 16" class="gl-cmd-palette-group-chevron"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 6l4 4 4-4"/></svg>' +
+              escHtml(g) +
+              '<span class="gl-cmd-palette-group-count">' + items.length + '</span>' +
+            '</div>';
+            if (!collapsed) {
+              items.forEach(function(entry) {
+                html +=
+                  '<div class="gl-cmd-palette-item' + (entry.idx === selectedIdx ? ' selected' : '') + '" data-idx="' + entry.idx + '">' +
+                    getIconSvg(entry.cmd.icon) +
+                    '<span class="gl-cmd-palette-item-label">' + escHtml(entry.cmd.label) + '</span>' +
+                    (entry.cmd.hint ? '<span class="gl-cmd-palette-item-hint">' + escHtml(entry.cmd.hint) + '</span>' : '') +
+                  '</div>';
+              });
+            }
+          });
+          if (!filtered.length) {
+            html = '<div class="gl-cmd-palette-empty">' + escHtml(msg('cmdEmpty')) + '</div>';
+          }
+          listEl.innerHTML = html;
+        }
+
+        function getVisibleIndices() {
+          var indices = [];
+          var els = listEl.querySelectorAll('.gl-cmd-palette-item');
+          els.forEach(function(el) { indices.push(parseInt(el.dataset.idx)); });
+          return indices;
+        }
+
+        function scrollToSelected() {
+          var sel = listEl.querySelector('.gl-cmd-palette-item.selected');
+          if (sel) sel.scrollIntoView({ block: 'nearest' });
+        }
+
+        function execSelected() {
+          if (filtered[selectedIdx]) {
+            closePalette();
+            filtered[selectedIdx].action();
+          }
+        }
+
+        function closePalette() {
+          _paletteOpen = false;
+          overlay.remove();
+          document.removeEventListener('keydown', onKey);
+        }
+
+        function onKey(e) {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            closePalette();
+            return;
+          }
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            var vis = getVisibleIndices();
+            if (!vis.length) return;
+            var curPos = vis.indexOf(selectedIdx);
+            if (e.key === 'ArrowDown') {
+              selectedIdx = curPos < vis.length - 1 ? vis[curPos + 1] : vis[vis.length - 1];
+            } else {
+              selectedIdx = curPos > 0 ? vis[curPos - 1] : vis[0];
+            }
+            renderList();
+            scrollToSelected();
+            return;
+          }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            execSelected();
+            return;
+          }
+        }
+
+        listEl.addEventListener('click', function(e) {
+          var groupEl = e.target.closest('.gl-cmd-palette-group');
+          if (groupEl && !isSearching) {
+            var groupName = groupEl.dataset.group;
+            _paletteCollapsed[groupName] = !_paletteCollapsed[groupName];
+            try { sessionStorage.setItem('gl-cmd-palette-collapsed', JSON.stringify(_paletteCollapsed)); } catch(e) {}
+            renderList();
+            var vis = getVisibleIndices();
+            if (vis.length && vis.indexOf(selectedIdx) === -1) {
+              selectedIdx = vis[0];
+              renderList();
+            }
+            return;
+          }
+          var item = e.target.closest('.gl-cmd-palette-item');
+          if (item) {
+            selectedIdx = parseInt(item.dataset.idx);
+            execSelected();
+          }
+        });
+
+        input.addEventListener('input', function() {
+          var q = input.value.toLowerCase().trim();
+          isSearching = !!q;
+          if (!q) {
+            filtered = cmds.slice();
+          } else {
+            filtered = cmds.filter(function(cmd) {
+              return cmd.label.toLowerCase().indexOf(q) !== -1 ||
+                     (cmd.hint && cmd.hint.toLowerCase().indexOf(q) !== -1) ||
+                     (cmd.group && cmd.group.toLowerCase().indexOf(q) !== -1);
+            });
+          }
+          renderList();
+          var vis = getVisibleIndices();
+          selectedIdx = vis.length ? vis[0] : 0;
+          renderList();
+        });
+
+        listEl.addEventListener('mousemove', function(e) {
+          var item = e.target.closest('.gl-cmd-palette-item');
+          if (item) {
+            var idx = parseInt(item.dataset.idx);
+            if (idx !== selectedIdx) {
+              selectedIdx = idx;
+              renderList();
+            }
+          }
+        });
+
+        overlay.addEventListener('click', function(e) {
+          if (e.target === overlay) closePalette();
+        });
+
+        document.addEventListener('keydown', onKey, true);
+
+        document.body.appendChild(overlay);
+        input.focus();
+        renderList();
+      }
+
+      document.addEventListener('keydown', function(e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          e.stopPropagation();
+          if (_paletteOpen) return;
+          openPalette();
+        }
+      }, true);
+
+      // ── Standup Modal ──────────────────────────────────────────────
+      function openStandupModal() {
+        var existing = document.querySelector('.gl-standup-overlay');
+        if (existing) { existing.remove(); return; }
+
+        var overlay = document.createElement('div');
+        overlay.className = 'gl-standup-overlay';
+
+        var modal = document.createElement('div');
+        modal.className = 'gl-standup-modal';
+
+        var now = new Date();
+        function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+        var todayIso = now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-' + pad2(now.getDate());
+
+        modal.innerHTML =
+          '<div class="gl-standup-header">' +
+            '<span>' + escHtml(msg('standupTitle')) + '</span>' +
+            '<div class="gl-standup-date-nav">' +
+              '<button class="gl-standup-date-btn gl-standup-prev" title="Previous day">\u2039</button>' +
+              '<input type="date" class="gl-standup-date" value="' + todayIso + '" max="' + todayIso + '">' +
+              '<button class="gl-standup-date-btn gl-standup-next" title="Next day" disabled>\u203a</button>' +
+            '</div>' +
+            '<button class="gl-standup-close" title="Close">&times;</button>' +
+          '</div>' +
+          '<div class="gl-standup-body">' +
+            '<div class="gl-standup-loading"><div class="gl-standup-spinner"></div></div>' +
+          '</div>' +
+          '<div class="gl-standup-actions" style="display:none">' +
+            '<button class="gl-standup-copy">' + escHtml(msg('standupCopy')) + '</button>' +
+          '</div>';
+
+        overlay.appendChild(modal);
+
+        var dateInput = modal.querySelector('.gl-standup-date');
+        var prevBtn = modal.querySelector('.gl-standup-prev');
+        var nextBtn = modal.querySelector('.gl-standup-next');
+        var bodyEl = modal.querySelector('.gl-standup-body');
+        var actionsEl = modal.querySelector('.gl-standup-actions');
+        var copyBtn = modal.querySelector('.gl-standup-copy');
+        var currentText = '';
+
+        function updateNavButtons() {
+          nextBtn.disabled = dateInput.value >= todayIso;
+        }
+
+        function loadDate(dateStr) {
+          bodyEl.innerHTML = '<div class="gl-standup-loading"><div class="gl-standup-spinner"></div></div>';
+          actionsEl.style.display = 'none';
+          chrome.runtime.sendMessage({ type: 'generate-standup', gitlabUrl: GITLAB_URL, date: dateStr }, function(resp) {
+            if (!resp || resp._error) {
+              bodyEl.innerHTML = '<div class="gl-standup-error">' + escHtml(resp ? resp._error : 'No response') + '</div>';
+              return;
+            }
+            currentText = resp.text || '';
+            bodyEl.innerHTML = '<pre class="gl-standup-content">' + escHtml(currentText) + '</pre>';
+            actionsEl.style.display = '';
+          });
+        }
+
+        function shiftDate(days) {
+          var d = new Date(dateInput.value + 'T00:00:00');
+          d.setDate(d.getDate() + days);
+          var iso = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+          if (iso > todayIso) return;
+          dateInput.value = iso;
+          updateNavButtons();
+          loadDate(iso);
+        }
+
+        dateInput.addEventListener('change', function() {
+          updateNavButtons();
+          loadDate(dateInput.value);
+        });
+        prevBtn.addEventListener('click', function() { shiftDate(-1); });
+        nextBtn.addEventListener('click', function() { shiftDate(1); });
+
+        copyBtn.addEventListener('click', function() {
+          navigator.clipboard.writeText(currentText).then(function() {
+            var orig = copyBtn.textContent;
+            copyBtn.textContent = '\u2713 ' + msg('standupCopied');
+            setTimeout(function() { copyBtn.textContent = orig; }, 2000);
+          });
+        });
+
+        function closeStandup() { overlay.remove(); }
+        modal.querySelector('.gl-standup-close').addEventListener('click', closeStandup);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeStandup(); });
+        document.addEventListener('keydown', function onEsc(e) {
+          if (e.key === 'Escape' && document.querySelector('.gl-standup-overlay')) {
+            closeStandup();
+            document.removeEventListener('keydown', onEsc);
+          }
+        });
+
+        document.body.appendChild(overlay);
+        loadDate(todayIso);
+      }
+    });
+  } catch(e) {}
+
 })();

@@ -535,6 +535,22 @@
         <h3 data-i18n="fUiTitle">UI Customization</h3>
         <p data-i18n="fUiDesc">Collapse top navigation bars with a toggle button. Hide the right sidebar on MR pages for full-width content. State persisted per session.</p>
       </div>
+      <!-- Command Palette -->
+      <div class="bento-card span-2">
+        <div class="bento-icon icon-blue">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fCmdPaletteTitle">Command Palette (Cmd+K)</h3>
+        <p data-i18n="fCmdPaletteDesc">Press Cmd+K (Mac) or Ctrl+K (Win) on any GitLab page. Navigate to MRs, issues, pipelines. Execute MR actions like rebase, merge, version bump. Fuzzy search, keyboard navigation, contextual commands.</p>
+      </div>
+      <!-- Daily Activity Report -->
+      <div class="bento-card">
+        <div class="bento-icon icon-green">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 data-i18n="fStandupTitle">Daily Activity Report</h3>
+        <p data-i18n="fStandupDesc">Generate a daily activity report from GitLab: MRs created, merged, reviewed, and in progress. Copy-paste ready for Slack or Jira.</p>
+      </div>
       <!-- Background tracker -->
       <div class="bento-card span-2">
         <div class="bento-icon icon-red">
@@ -774,6 +790,10 @@
         fDraftDesc: 'Mark or unmark MR as draft instantly. Copy MR title and link to clipboard for sharing in messengers and task trackers.',
         fCustomTitle: 'Fully Customizable',
         fCustomDesc: 'Drag & drop button order, per-project profiles with separate settings, custom CI job buttons. Configure everything from the extension popup.',
+        fCmdPaletteTitle: 'Command Palette (Cmd+K)',
+        fCmdPaletteDesc: 'Press Cmd+K (Mac) or Ctrl+K (Win) on any GitLab page. Navigate to MRs, issues, pipelines. Execute MR actions like rebase, merge, version bump. Fuzzy search, keyboard navigation, contextual commands.',
+        fStandupTitle: 'Daily Activity Report',
+        fStandupDesc: 'Generate a daily activity report from GitLab: MRs created, merged, reviewed, and in progress. Copy-paste ready for Slack or Jira.',
         fTrackerTitle: 'Background Job Tracker',
         fTrackerDesc: 'Long-running operations (Ship, Rebase + Auto-merge) run in the background service worker. A floating tracker panel shows real-time progress with step-by-step visualization and cancel support. Works across all GitLab tabs.',
 
@@ -859,6 +879,10 @@
         fDraftDesc: 'Мгновенная отметка MR как черновика. Копирование заголовка и ссылки MR в буфер обмена для отправки в мессенджеры и трекеры задач.',
         fCustomTitle: 'Полная настройка',
         fCustomDesc: 'Drag & drop порядок кнопок, профили по проектам с отдельными настройками, кастомные CI-джобы. Всё настраивается из попапа расширения.',
+        fCmdPaletteTitle: 'Командная палитра (Cmd+K)',
+        fCmdPaletteDesc: 'Нажмите Cmd+K (Mac) или Ctrl+K (Win) на любой странице GitLab. Навигация к MR, issues, pipelines. Выполнение действий: rebase, merge, version bump. Поиск, навигация клавишами, контекстные команды.',
+        fStandupTitle: 'Отчёт по дневной активности',
+        fStandupDesc: 'Сгенерируйте отчёт по активности за день: созданные, смёрженные и отревьюенные MR. Готов для вставки в Slack или Jira.',
         fTrackerTitle: 'Трекер фоновых задач',
         fTrackerDesc: 'Долгие операции (Ship, Rebase + Auto-merge) выполняются в фоновом service worker. Плавающая панель показывает прогресс в реальном времени с визуализацией шагов и кнопкой отмены. Работает на всех вкладках GitLab.',
 

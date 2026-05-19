@@ -300,5 +300,54 @@
   "failedJobTraceError": { "message": "Не удалось загрузить лог" },
   "failedJobsMore": { "message": "...и ещё $1 упавших jobs", "placeholders": { "1": { "content": "$1" } } },
   "cardFailedJobViewTitle": { "message": "Быстрый просмотр ошибок" },
-  "cardFailedJobViewDesc": { "message": "При падении пайплайна показывает имена упавших джобов и последние строки лога ошибки прямо на странице MR. Не нужно кликать в пайплайн, чтобы найти ошибку." }
+  "cardFailedJobViewDesc": { "message": "При падении пайплайна показывает имена упавших джобов и последние строки лога ошибки прямо на странице MR. Не нужно кликать в пайплайн, чтобы найти ошибку." },
+
+  "showCmdPalette": { "message": "Командная палитра (Cmd+K / Ctrl+K)" },
+  "showStandup": { "message": "Отчёт по дневной активности" },
+
+  "cmdPlaceholder": { "message": "Введите команду..." },
+  "cmdFooterNavigate": { "message": "навигация" },
+  "cmdFooterSelect": { "message": "выбрать" },
+  "cmdFooterClose": { "message": "закрыть" },
+  "cmdEmpty": { "message": "Команды не найдены" },
+
+  "cmdGroupNav": { "message": "Навигация" },
+  "cmdGroupMr": { "message": "Действия MR" },
+  "cmdGroupExt": { "message": "Расширение" },
+
+  "cmdNavMrs": { "message": "Перейти к Merge Requests" },
+  "cmdNavIssues": { "message": "Перейти к Issues" },
+  "cmdNavPipelines": { "message": "Перейти к Pipelines" },
+  "cmdNavBranches": { "message": "Перейти к Branches" },
+  "cmdNavRepo": { "message": "Перейти к репозиторию" },
+  "cmdNavTags": { "message": "Перейти к тегам" },
+  "cmdNavCommits": { "message": "Перейти к коммитам" },
+  "cmdNavWiki": { "message": "Перейти к Wiki" },
+  "cmdNavSnippets": { "message": "Перейти к сниппетам" },
+  "cmdNavSettings": { "message": "Перейти к настройкам" },
+  "cmdCopyPath": { "message": "Копировать путь проекта" },
+  "cmdGroupPinned": { "message": "Закреплённые" },
+
+  "cmdMrCopy": { "message": "Копировать ссылку на MR" },
+  "cmdMrRebase": { "message": "Rebase" },
+  "cmdMrVersion": { "message": "Version bump" },
+  "cmdMrAutomerge": { "message": "Auto-merge" },
+  "cmdMrShip": { "message": "Ship (Version + Auto-merge)" },
+  "cmdMrDraft": { "message": "Переключить Draft / Ready" },
+  "cmdMrPipelineRestart": { "message": "Новый пайплайн" },
+  "cmdMrPipelineCancel": { "message": "Отменить пайплайн" },
+  "cmdMrRetryFailed": { "message": "Перезапустить упавшие джобы" },
+  "cmdMrReviewers": { "message": "Назначить ревьюеров" },
+
+  "cmdExtSettings": { "message": "Открыть настройки расширения" },
+  "cmdExtStandup": { "message": "Сгенерировать отчёт по активности" },
+
+  "standupTitle": { "message": "Дневная активность" },
+  "standupCopy": { "message": "Копировать в буфер" },
+  "standupCopied": { "message": "Скопировано!" },
+
+  "cardCmdPaletteTitle": { "message": "Командная палитра" },
+  "cardCmdPaletteDesc": { "message": "Нажмите Cmd+K (Mac) или Ctrl+K (Win) на любой странице GitLab для быстрого доступа к навигации, действиям MR и функциям расширения." },
+  "cardStandupTitle": { "message": "Отчёт по дневной активности" },
+  "cardStandupDesc": { "message": "Генерирует отчёт по вашей активности в GitLab за день. Показывает созданные, смёрженные и отревьюенные MR. Скопируйте и вставьте в Slack или Jira." }
 }

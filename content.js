@@ -1238,6 +1238,47 @@
         container.appendChild(qcBtn);
       });
 
+      // Expose available actions for command palette
+      var paletteKeyMap = {
+        btn_copy_mr: 'mr-copy',
+        btn_rebase: 'mr-rebase',
+        btn_version: 'mr-version',
+        btn_rebase_automerge: 'mr-automerge',
+        btn_ship: 'mr-ship',
+        btn_draft_toggle: 'mr-draft',
+        btn_pipeline_restart: 'mr-pipeline-restart',
+        btn_pipeline_cancel: 'mr-pipeline-cancel',
+        btn_retry_failed: 'mr-retry-failed',
+        btn_reviewers: 'mr-reviewers',
+        btn_rebase_version: 'mr-rebase-version',
+        btn_rebase_force: 'mr-rebase-force',
+        btn_force_ship: 'mr-force-ship'
+      };
+      var paletteActions = [];
+      orderedKeys.forEach(function(key) {
+        if (key.indexOf('custom_') === 0) {
+          var idx = parseInt(key.replace('custom_', ''));
+          var job = (s.customJobs || [])[idx];
+          if (job && job.label && job.jobName) {
+            paletteActions.push({ id: 'custom-job-' + idx, label: job.label, icon: 'action' });
+          }
+        } else {
+          var def = builtinDefs[key];
+          if (!def || !s[key] || def.hide) return;
+          var palId = paletteKeyMap[key];
+          if (palId) {
+            paletteActions.push({ id: palId, label: def.label, icon: key.indexOf('pipeline') !== -1 ? 'pipe' : (key === 'btn_copy_mr' ? 'copy' : 'action') });
+          }
+        }
+      });
+      // Quick comments as palette actions
+      (s.quickComments || []).forEach(function(qc, i) {
+        if (qc.label && qc.text) {
+          paletteActions.push({ id: 'quick-comment-' + i, label: qc.label, icon: 'action' });
+        }
+      });
+      window.__glMrPaletteActions = paletteActions;
+
       // Conflicts indicator badge
       if (mr.has_conflicts) {
         var conflictBadge = document.createElement('span');
@@ -1471,6 +1512,58 @@
           .then(function(data) { sendResponse(data); })
           .catch(function(err) { sendResponse({ _error: err.message }); });
         return true; // async sendResponse
+      }
+    });
+
+    // Command palette action bridge — receives postMessage from content_proxy.js
+    window.addEventListener('message', function(e) {
+      if (!e.data || e.data.type !== 'gl-mr-ext-palette-action') return;
+      var actionId = e.data.actionId;
+      var actionMap = {
+        'mr-copy':             function() { return doCopyMr(); },
+        'mr-rebase':           function() { return doJustRebase(); },
+        'mr-version':          function() { return doVersionBump(); },
+        'mr-rebase-version':   function() { return doRebaseVersion(); },
+        'mr-automerge':        function() { return doRebaseAutoMerge(); },
+        'mr-rebase-force':     function() { return doRebaseForce(); },
+        'mr-ship':             function() { return doShip(); },
+        'mr-force-ship':       function() { return doForceShip(); },
+        'mr-draft':            function() { return doDraftToggle(); },
+        'mr-pipeline-restart': function() { return doPipelineRestart(); },
+        'mr-pipeline-cancel':  function() { return doPipelineCancel(); },
+        'mr-retry-failed':     function() { return doRetryFailed(); },
+        'mr-reviewers':        function() { return getSettings().then(function(s) { var list = (s.reviewersList || '').split(/[,\s]+/).map(function(u) { return u.replace(/^@/, '').trim(); }).filter(Boolean); return doReviewers(s.reviewersJob || 'get-reviewers', list); }); },
+      };
+      // Custom jobs
+      if (actionId.indexOf('custom-job-') === 0) {
+        var jobIdx = parseInt(actionId.replace('custom-job-', ''));
+        getSettings().then(function(s) {
+          var job = (s.customJobs || [])[jobIdx];
+          if (job && job.jobName) {
+            doTriggerJob(job.jobName).catch(function(err) {
+              showToast(err.message || String(err), 'error');
+            });
+          }
+        });
+        return;
+      }
+      // Quick comments
+      if (actionId.indexOf('quick-comment-') === 0) {
+        var qcIdx = parseInt(actionId.replace('quick-comment-', ''));
+        getSettings().then(function(s) {
+          var qc = (s.quickComments || [])[qcIdx];
+          if (qc && qc.text) {
+            api('POST', '/projects/' + PROJECT_ID + '/merge_requests/' + MR_IID + '/notes', { body: qc.text })
+              .then(function() { showToast(qc.label + ' \u2713', 'success'); })
+              .catch(function(err) { showToast(err.message || String(err), 'error'); });
+          }
+        });
+        return;
+      }
+      if (actionMap[actionId]) {
+        actionMap[actionId]().catch(function(err) {
+          showToast(err.message || String(err), 'error');
+        });
       }
     });
   }

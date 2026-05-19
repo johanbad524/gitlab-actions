@@ -300,5 +300,54 @@
   "failedJobTraceError": { "message": "Could not load trace" },
   "failedJobsMore": { "message": "...and $1 more failed job(s)", "placeholders": { "1": { "content": "$1" } } },
   "cardFailedJobViewTitle": { "message": "Failed job quick view" },
-  "cardFailedJobViewDesc": { "message": "When a pipeline fails, shows failed job names and last lines of the error log directly on the MR page. No need to click through to find the error." }
+  "cardFailedJobViewDesc": { "message": "When a pipeline fails, shows failed job names and last lines of the error log directly on the MR page. No need to click through to find the error." },
+
+  "showCmdPalette": { "message": "Command palette (Cmd+K / Ctrl+K)" },
+  "showStandup": { "message": "Daily activity report" },
+
+  "cmdPlaceholder": { "message": "Type a command..." },
+  "cmdFooterNavigate": { "message": "navigate" },
+  "cmdFooterSelect": { "message": "select" },
+  "cmdFooterClose": { "message": "close" },
+  "cmdEmpty": { "message": "No matching commands" },
+
+  "cmdGroupNav": { "message": "Navigation" },
+  "cmdGroupMr": { "message": "MR Actions" },
+  "cmdGroupExt": { "message": "Extension" },
+
+  "cmdNavMrs": { "message": "Go to Merge Requests" },
+  "cmdNavIssues": { "message": "Go to Issues" },
+  "cmdNavPipelines": { "message": "Go to Pipelines" },
+  "cmdNavBranches": { "message": "Go to Branches" },
+  "cmdNavRepo": { "message": "Go to Repository" },
+  "cmdNavTags": { "message": "Go to Tags" },
+  "cmdNavCommits": { "message": "Go to Commits" },
+  "cmdNavWiki": { "message": "Go to Wiki" },
+  "cmdNavSnippets": { "message": "Go to Snippets" },
+  "cmdNavSettings": { "message": "Go to Settings" },
+  "cmdCopyPath": { "message": "Copy project path" },
+  "cmdGroupPinned": { "message": "Pinned" },
+
+  "cmdMrCopy": { "message": "Copy MR link" },
+  "cmdMrRebase": { "message": "Rebase" },
+  "cmdMrVersion": { "message": "Version bump" },
+  "cmdMrAutomerge": { "message": "Auto-merge" },
+  "cmdMrShip": { "message": "Ship (Version + Auto-merge)" },
+  "cmdMrDraft": { "message": "Toggle Draft / Ready" },
+  "cmdMrPipelineRestart": { "message": "New pipeline" },
+  "cmdMrPipelineCancel": { "message": "Cancel pipeline" },
+  "cmdMrRetryFailed": { "message": "Retry failed jobs" },
+  "cmdMrReviewers": { "message": "Assign reviewers" },
+
+  "cmdExtSettings": { "message": "Open extension settings" },
+  "cmdExtStandup": { "message": "Generate activity report" },
+
+  "standupTitle": { "message": "Daily Activity" },
+  "standupCopy": { "message": "Copy to clipboard" },
+  "standupCopied": { "message": "Copied!" },
+
+  "cardCmdPaletteTitle": { "message": "Command palette" },
+  "cardCmdPaletteDesc": { "message": "Press Cmd+K (Mac) or Ctrl+K (Win) on any GitLab page to open the command palette. Quick access to navigation, MR actions, and extension features." },
+  "cardStandupTitle": { "message": "Daily activity report" },
+  "cardStandupDesc": { "message": "Generate a daily activity report from your GitLab data. Shows created, merged, and reviewed MRs. Copy and paste into Slack or Jira." }
 }

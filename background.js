@@ -492,6 +492,239 @@ chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     return true;
   }
 
+  if (msg.type === 'open-options') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('popup.html') });
+    return;
+  }
+
+  if (msg.type === 'generate-standup') {
+    var standupUrl = msg.gitlabUrl;
+    var fakeTask = { gitlabUrl: standupUrl };
+
+    // Get current user
+    api(fakeTask, 'GET', '/user').then(function(user) {
+      if (!user || !user.id) throw new Error('Cannot get current user');
+      var userId = user.id;
+      var username = user.username;
+      // Use provided date or default to today (local dates, no UTC conversion)
+      function localDateStr(d) {
+        return d.getFullYear() + '-' +
+          (d.getMonth() + 1 < 10 ? '0' : '') + (d.getMonth() + 1) + '-' +
+          (d.getDate() < 10 ? '0' : '') + d.getDate();
+      }
+      var targetDate = msg.date ? new Date(msg.date + 'T12:00:00') : new Date();
+      var todayStr = msg.date || localDateStr(targetDate);
+      // Next day
+      var nextDay = new Date(todayStr + 'T12:00:00');
+      nextDay.setDate(nextDay.getDate() + 1);
+      var nextDayStr = localDateStr(nextDay);
+      // Day before (events API "after" is exclusive)
+      var dayBefore = new Date(todayStr + 'T12:00:00');
+      dayBefore.setDate(dayBefore.getDate() - 1);
+      var dayBeforeStr = localDateStr(dayBefore);
+
+      // Helper: fetch all event pages for the day (up to 5 pages)
+      function fetchAllEvents(page, collected) {
+        if (page > 5) return Promise.resolve(collected);
+        return api(fakeTask, 'GET', '/users/' + userId + '/events?after=' + dayBeforeStr + '&before=' + nextDayStr + '&per_page=100&page=' + page)
+          .then(function(events) {
+            if (!events || !events.length) return collected;
+            collected = collected.concat(events);
+            if (events.length < 100) return collected;
+            return fetchAllEvents(page + 1, collected);
+          });
+      }
+
+      // Fetch activity in parallel
+      return Promise.all([
+        // MRs created on target date
+        api(fakeTask, 'GET', '/merge_requests?scope=all&state=all&author_id=' + userId + '&created_after=' + todayStr + 'T00:00:00Z&created_before=' + nextDayStr + 'T00:00:00Z&per_page=50'),
+        // MRs merged on target date
+        api(fakeTask, 'GET', '/merge_requests?scope=all&state=merged&author_id=' + userId + '&updated_after=' + todayStr + 'T00:00:00Z&updated_before=' + nextDayStr + 'T00:00:00Z&per_page=50'),
+        // All events for target date (paginated)
+        fetchAllEvents(1, []),
+        // Open MRs updated on target date (for "in progress")
+        api(fakeTask, 'GET', '/merge_requests?scope=all&state=opened&author_id=' + userId + '&updated_after=' + todayStr + 'T00:00:00Z&updated_before=' + nextDayStr + 'T00:00:00Z&per_page=50'),
+      ]).then(function(results) {
+        var createdMrs = results[0] || [];
+        var mergedMrs = results[1] || [];
+        var events = results[2] || [];
+        var activeMrs = results[3] || [];
+
+        // Filter created on target date (double-check)
+        createdMrs = createdMrs.filter(function(mr) {
+          return mr.created_at && mr.created_at.indexOf(todayStr) === 0;
+        });
+
+        // Filter merged on target date (double-check merged_at)
+        mergedMrs = mergedMrs.filter(function(mr) {
+          return mr.merged_at && mr.merged_at.indexOf(todayStr) === 0;
+        });
+
+        // Filter events to target date only
+        events = events.filter(function(ev) {
+          return ev.created_at && ev.created_at.indexOf(todayStr) === 0;
+        });
+
+        // Collect created MR IDs to avoid duplicates
+        var createdIids = {};
+        createdMrs.forEach(function(mr) { createdIids[mr.id] = true; });
+        var mergedIids = {};
+        mergedMrs.forEach(function(mr) { mergedIids[mr.id] = true; });
+
+        // Commented MRs (deduplicate by note.id to avoid double-counting)
+        var commentedMap = {};
+        var seenNoteIds = {};
+        events.forEach(function(ev) {
+          if (ev.action_name === 'commented on' && ev.note && ev.note.noteable_type === 'MergeRequest') {
+            if (seenNoteIds[ev.note.id]) return;
+            seenNoteIds[ev.note.id] = true;
+            var mrIid = ev.note.noteable_iid;
+            var projId = ev.project_id;
+            var key = projId + '!' + mrIid;
+            if (!commentedMap[key]) {
+              commentedMap[key] = { iid: mrIid, projectId: projId, count: 0, targetTitle: ev.target_title || '' };
+            }
+            commentedMap[key].count++;
+          }
+        });
+
+        // Approved MRs
+        var approvedMap = {};
+        events.forEach(function(ev) {
+          if (ev.action_name === 'approved' && ev.target_type === 'MergeRequest') {
+            var key = ev.project_id + '!' + ev.target_iid;
+            approvedMap[key] = { iid: ev.target_iid, title: ev.target_title || '' };
+          }
+        });
+
+        // Collect unique project IDs from events and resolve names
+        var projectIds = {};
+        events.forEach(function(ev) {
+          if (ev.project_id) projectIds[ev.project_id] = '';
+        });
+
+        // Fetch project names in parallel
+        var pidList = Object.keys(projectIds);
+        return (pidList.length ? Promise.all(pidList.map(function(pid) {
+          return api(fakeTask, 'GET', '/projects/' + pid + '?simple=true').then(function(proj) {
+            if (proj && proj.path_with_namespace) projectIds[pid] = proj.path_with_namespace;
+          }).catch(function() {});
+        })) : Promise.resolve()).then(function() {
+
+        function projName(ev) { return projectIds[ev.project_id] || ''; }
+
+        // Pushes — group by project + branch
+        var pushMap = {};
+        events.forEach(function(ev) {
+          if (ev.action_name === 'pushed to' || ev.action_name === 'pushed new') {
+            var ref = ev.push_data ? ev.push_data.ref : '';
+            var refType = ev.push_data ? ev.push_data.ref_type : 'branch';
+            if (refType === 'tag') return;
+            var pName = projName(ev);
+            var key = (pName || ev.project_id) + ':' + ref;
+            if (!pushMap[key]) {
+              pushMap[key] = { ref: ref, project: pName, commits: 0 };
+            }
+            var commitCount = ev.push_data ? (ev.push_data.commit_count || 1) : 1;
+            pushMap[key].commits += commitCount;
+          }
+        });
+
+        // Tags
+        var tags = [];
+        events.forEach(function(ev) {
+          if (ev.push_data && ev.push_data.ref_type === 'tag') {
+            tags.push({ tag: ev.push_data.ref, project: projName(ev) });
+          }
+        });
+
+        // Build report
+        var lines = [];
+
+        if (createdMrs.length) {
+          lines.push('Created:');
+          createdMrs.forEach(function(mr) {
+            var proj = mr.references && mr.references.full ? mr.references.full.split('!')[0] : '';
+            lines.push('  - !' + mr.iid + ' ' + mr.title + (proj ? ' (' + proj.replace(/\/$/, '') + ')' : ''));
+          });
+          lines.push('');
+        }
+
+        if (mergedMrs.length) {
+          lines.push('Merged:');
+          mergedMrs.forEach(function(mr) {
+            var proj = mr.references && mr.references.full ? mr.references.full.split('!')[0] : '';
+            lines.push('  - !' + mr.iid + ' ' + mr.title + (proj ? ' (' + proj.replace(/\/$/, '') + ')' : ''));
+          });
+          lines.push('');
+        }
+
+        var commentedKeys = Object.keys(commentedMap);
+        if (commentedKeys.length) {
+          lines.push('Commented:');
+          commentedKeys.forEach(function(key) {
+            var r = commentedMap[key];
+            lines.push('  - !' + r.iid + ' ' + (r.targetTitle || '') + ' \u2014 ' + r.count + ' comment' + (r.count > 1 ? 's' : ''));
+          });
+          lines.push('');
+        }
+
+        var approvedKeys = Object.keys(approvedMap);
+        if (approvedKeys.length) {
+          lines.push('Approved:');
+          approvedKeys.forEach(function(key) {
+            var a = approvedMap[key];
+            lines.push('  - !' + a.iid + ' ' + a.title);
+          });
+          lines.push('');
+        }
+
+        var pushKeys = Object.keys(pushMap);
+        if (pushKeys.length) {
+          lines.push('Pushed:');
+          pushKeys.forEach(function(key) {
+            var p = pushMap[key];
+            lines.push('  - ' + (p.project ? p.project + ' - ' : '') + p.ref + ' \u2014 ' + p.commits + ' commit' + (p.commits > 1 ? 's' : ''));
+          });
+          lines.push('');
+        }
+
+        if (tags.length) {
+          lines.push('Tags:');
+          tags.forEach(function(t) {
+            lines.push('  - ' + t.tag + (t.project ? ' (' + t.project + ')' : ''));
+          });
+          lines.push('');
+        }
+
+        // In progress — open MRs updated on target date, excluding created/merged
+        var inProgress = activeMrs.filter(function(mr) {
+          return !createdIids[mr.id] && !mergedIids[mr.id];
+        });
+        if (inProgress.length) {
+          lines.push('In progress:');
+          inProgress.forEach(function(mr) {
+            var proj = mr.references && mr.references.full ? mr.references.full.split('!')[0] : '';
+            var status = '';
+            if (mr.pipeline && mr.pipeline.status) status = ' \u2014 pipeline ' + mr.pipeline.status;
+            lines.push('  - !' + mr.iid + ' ' + mr.title + (proj ? ' (' + proj.replace(/\/$/, '') + ')' : '') + status);
+          });
+        }
+
+        if (!lines.length) {
+          lines.push('No activity for this day.');
+        }
+
+        sendResponse({ text: lines.join('\n') });
+      }); // end projectIds resolve
+      }); // end main Promise.all
+    }).catch(function(err) {
+      sendResponse({ _error: err.message || String(err) });
+    });
+    return true;
+  }
+
   if (msg.type === 'get-active-tasks') {
     var active = [];
     for (var id in tasks) {

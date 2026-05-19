@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+### New features
+- **Command palette (Cmd+K)** — press Cmd+K (Mac) or Ctrl+K (Win) on any GitLab page to open a command palette with navigation, MR actions, and extension commands. Contextual: shows MR actions on MR detail pages, navigation commands on all pages.
+- **Daily activity report** — generate a summary of your GitLab activity for the day (MRs created, merged, commented, approved, in progress). Copy and paste into Slack or Jira. Available via command palette or extension settings.
+
+---
+
 ## 1.5.0
 
 ### New features

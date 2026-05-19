@@ -93,6 +93,8 @@ var DEFAULTS = Object.assign({}, BUTTON_DEFAULTS, {
   // show_group_by_author: false,
   collapse_bars: false,
   hide_right_sidebar: false,
+  show_cmd_palette: true,
+  show_standup: true,
   jira_url: '',
   jira_ticket_regex: '',
   quickComments: [],
@@ -236,6 +238,8 @@ function renderDefaultTab(container) {
     '<h4>' + escHtml(t('uiCustomization')) + '</h4>' +
     '<div class="toggle"><input type="checkbox" id="collapse_bars"><label for="collapse_bars">' + escHtml(t('collapseBars')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="hide_right_sidebar"><label for="hide_right_sidebar">' + escHtml(t('hideRightSidebar')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_cmd_palette"><label for="show_cmd_palette">' + escHtml(t('showCmdPalette')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_standup"><label for="show_standup">' + escHtml(t('showStandup')) + '</label></div>' +
     '<div class="sep"></div>' +
     '<h4>' + escHtml(t('jiraIntegration')) + '</h4>' +
     '<div class="field"><label>' + escHtml(t('jiraUrl')) + '</label><input type="text" id="jira_url" placeholder="https://jira.company.com"><div class="hint">' + escHtml(t('jiraUrlHint')) + '</div></div>' +
@@ -308,6 +312,8 @@ function renderDefaultTab(container) {
   // document.getElementById('show_group_by_author').checked = allData.show_group_by_author || false;
   document.getElementById('collapse_bars').checked = allData.collapse_bars || false;
   document.getElementById('hide_right_sidebar').checked = allData.hide_right_sidebar || false;
+  document.getElementById('show_cmd_palette').checked = allData.show_cmd_palette !== false;
+  document.getElementById('show_standup').checked = allData.show_standup !== false;
   document.getElementById('jira_url').value = allData.jira_url || '';
   document.getElementById('jira_ticket_regex').value = allData.jira_ticket_regex || '';
   document.getElementById('show_jira_details').checked = allData.show_jira_details || false;
@@ -792,6 +798,8 @@ function saveDefaultTab() {
   // settings.show_group_by_author = document.getElementById('show_group_by_author').checked;
   settings.collapse_bars = document.getElementById('collapse_bars').checked;
   settings.hide_right_sidebar = document.getElementById('hide_right_sidebar').checked;
+  settings.show_cmd_palette = document.getElementById('show_cmd_palette').checked;
+  settings.show_standup = document.getElementById('show_standup').checked;
   var newJiraUrl = (document.getElementById('jira_url').value || '').trim().replace(/\/+$/, '');
   if (newJiraUrl && newJiraUrl !== allData.jira_url) {
     // Request host permission for Jira domain
