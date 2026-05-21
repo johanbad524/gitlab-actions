@@ -279,6 +279,11 @@
   "showThreadsBadge": { "message": "Unresolved threads count on MR list" },
   "showSizeBadge": { "message": "MR size labels (S/M/L/XL) on MR list" },
   "showConflictsBadge": { "message": "Show conflicts indicator on MR list" },
+  "showApprovalBadge": { "message": "Show approval count and my approval indicator on MR list" },
+  "approvalBadgeMine": { "message": "You approved" },
+  "approvalBadgeOthers": { "message": "Approved by others" },
+  "approvalBadgeMineShort": { "message": "You" },
+  "approvalBadgeApproved": { "message": "Approved" },
 
   "cardThreadsTitle": { "message": "Unresolved threads count" },
   "cardThreadsDesc": { "message": "Shows a red badge with the number of unresolved discussion threads on each MR in the list." },
@@ -289,6 +294,9 @@
 
   "cardConflictsTitle": { "message": "Conflicts indicator" },
   "cardConflictsDesc": { "message": "Shows a red CONFLICTS badge on MR detail page when the branch has merge conflicts." },
+
+  "cardApprovalTitle": { "message": "My approval indicator" },
+  "cardApprovalDesc": { "message": "Shows whether you have approved each MR on the list page. Distinguishes your approval from approvals by others." },
 
   "cardCopyMrListTitle": { "message": "Copy MR from list" },
   "cardCopyMrListDesc": { "message": "Adds a copy button to each MR on the list page. Copies the MR title and link to clipboard with one click." },

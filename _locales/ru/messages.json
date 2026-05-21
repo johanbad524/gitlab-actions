@@ -279,6 +279,11 @@
   "showThreadsBadge": { "message": "Количество нерешённых тредов в списке MR" },
   "showSizeBadge": { "message": "Размер MR (S/M/L/XL) в списке" },
   "showConflictsBadge": { "message": "Показывать индикатор конфликтов в списке MR" },
+  "showApprovalBadge": { "message": "Показывать кол-во аппрувов и индикатор моего в списке MR" },
+  "approvalBadgeMine": { "message": "Вы одобрили" },
+  "approvalBadgeOthers": { "message": "Одобрено другими" },
+  "approvalBadgeMineShort": { "message": "Вы" },
+  "approvalBadgeApproved": { "message": "Approved" },
 
   "cardThreadsTitle": { "message": "Нерешённые треды" },
   "cardThreadsDesc": { "message": "Показывает красный бейдж с количеством нерешённых тредов обсуждений на каждом MR в списке." },
@@ -289,6 +294,9 @@
 
   "cardConflictsTitle": { "message": "Индикатор конфликтов" },
   "cardConflictsDesc": { "message": "Показывает красный бейдж КОНФЛИКТЫ на странице MR при наличии конфликтов слияния." },
+
+  "cardApprovalTitle": { "message": "Индикатор моего аппрува" },
+  "cardApprovalDesc": { "message": "Показывает, одобрили ли вы каждый MR в списке. Отличает ваш аппрув от аппрувов других." },
 
   "cardCopyMrListTitle": { "message": "Копирование MR из списка" },
   "cardCopyMrListDesc": { "message": "Добавляет кнопку копирования к каждому MR в списке. Копирует название и ссылку в буфер обмена одним кликом." },

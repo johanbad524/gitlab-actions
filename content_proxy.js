@@ -1455,7 +1455,67 @@
     insertAfterSafe(titleContainer, badge, sizeBadge || titleEl);
   }
 
-  function fetchAndRenderMrMeta(showThreads, showSize, showConflicts) {
+  function renderApprovalIndicator(mrItem, approvedBy, username) {
+    if (mrItem.querySelector('.gl-mr-ext-approval-done')) return;
+    if (!approvedBy || !approvedBy.length) return;
+
+    var myApproval = false;
+    for (var i = 0; i < approvedBy.length; i++) {
+      var u = approvedBy[i];
+      var uname = (u.user && u.user.username) || u.username || '';
+      if (uname === username) { myApproval = true; break; }
+    }
+
+    var names = approvedBy.map(function(a) { var u = a.user || a; return u.name || u.username || ''; }).join(', ');
+
+    // Try to find and enhance the existing GitLab approval badge
+    var nativeBadge = mrItem.querySelector('[data-testid="mr-appovals"], [data-testid="mr-approvals"]');
+    if (!nativeBadge) {
+      // Fallback: look for badge with "Approved" text
+      var badges = mrItem.querySelectorAll('.gl-badge.badge-success, .gl-badge.badge-pill');
+      for (var b = 0; b < badges.length; b++) {
+        var txt = (badges[b].textContent || '').trim();
+        if (txt.indexOf('Approved') !== -1 || txt.indexOf('approved') !== -1 || txt.indexOf('approval') !== -1) {
+          nativeBadge = badges[b];
+          break;
+        }
+      }
+    }
+
+    var youLabel = msg('approvalBadgeMineShort') || 'You';
+    var othersCount = approvedBy.length - (myApproval ? 1 : 0);
+
+    var suffix = myApproval
+      ? youLabel + (othersCount > 0 ? ' +' + othersCount : '')
+      : String(approvedBy.length);
+
+    if (nativeBadge) {
+      nativeBadge.classList.add('gl-mr-ext-approval-done');
+      nativeBadge.title = names;
+      var contentSpan = nativeBadge.querySelector('.gl-badge-content');
+      if (contentSpan) {
+        var origText = (contentSpan.textContent || '').trim();
+        contentSpan.textContent = origText + ' \u00b7 ' + suffix;
+      }
+      return;
+    }
+
+    // Fallback: create our own badge in GitLab native style
+    var controlsUl = q(mrItem, SEL.controls);
+    if (!controlsUl) return;
+
+    var li = document.createElement('li');
+    li.style.cssText = 'display:inline-flex;align-items:center;margin-right:0;margin-left:0';
+    var badge = document.createElement('span');
+    badge.className = 'gl-badge badge badge-pill badge-success gl-mr-ext-approval-done';
+    badge.title = names;
+    badge.innerHTML = '<svg viewBox="0 0 16 16" class="gl-badge-icon gl-icon s16 gl-fill-current -gl-ml-2"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm3.03-8.47a.75.75 0 0 0-1.06-1.06L7 8.44 6.03 7.47a.75.75 0 0 0-1.06 1.06l1.5 1.5a.75.75 0 0 0 1.06 0l3.5-3.5Z" fill="currentColor"/></svg>'
+      + ' <span class="gl-badge-content">Approved \u00b7 ' + escHtml(suffix) + '</span>';
+    li.appendChild(badge);
+    controlsUl.insertBefore(li, controlsUl.firstChild);
+  }
+
+  function fetchAndRenderMrMeta(showThreads, showSize, showConflicts, showApprovals, username) {
     if (_mrMetaFetching) return;
 
     var mrItems = qAll(document, SEL.mrItem);
@@ -1474,6 +1534,7 @@
         if (showThreads) renderThreadsBadge(item, cached.threads);
         if (showSize) renderSizeBadge(item, cached.changesLines, cached.changesFiles);
         if (showConflicts && cached.conflicts) renderConflictBadge(item);
+        if (showApprovals && cached.approvedBy) renderApprovalIndicator(item, cached.approvedBy, username);
         _jiraRenderingBadges = false;
         return;
       }
@@ -1490,33 +1551,43 @@
 
     function fetchOneEntry(entry) {
       var encodedPath = encodeURIComponent(entry.projectPath);
-      return api('GET', '/projects/' + encodedPath + '/merge_requests/' + entry.iid + '?include_rebase_in_progress=false')
-        .then(function(mr) {
+      var mrPromise = api('GET', '/projects/' + encodedPath + '/merge_requests/' + entry.iid + '?include_rebase_in_progress=false');
+      var approvalsPromise = showApprovals
+        ? api('GET', '/projects/' + encodedPath + '/merge_requests/' + entry.iid + '/approvals').catch(function() { return null; })
+        : Promise.resolve(null);
+      var threadsPromise = showThreads
+        ? api('GET', '/projects/' + encodedPath + '/merge_requests/' + entry.iid + '/discussions?per_page=100').catch(function() { return []; })
+        : Promise.resolve(null);
+
+      return Promise.all([mrPromise, approvalsPromise, threadsPromise])
+        .then(function(results) {
+          var mr = results[0];
+          var approvalsData = results[1];
+          var discussions = results[2];
+
           var changesLines = (mr.additions !== undefined && mr.deletions !== undefined)
             ? (parseInt(mr.additions) || 0) + (parseInt(mr.deletions) || 0)
             : 0;
           var changesFiles = mr.changes_count ? parseInt(mr.changes_count) : 0;
           var conflicts = !!mr.has_conflicts;
-          if (showThreads) {
-            return api('GET', '/projects/' + encodedPath + '/merge_requests/' + entry.iid + '/discussions?per_page=100')
-              .then(function(discussions) {
-                var unresolvedCount = 0;
-                (discussions || []).forEach(function(d) {
-                  if (d.notes && d.notes.length && d.notes[0].resolvable && !d.notes[0].resolved) {
-                    unresolvedCount++;
-                  }
-                });
-                return { threads: unresolvedCount, changesLines: changesLines, changesFiles: changesFiles, conflicts: conflicts };
-              });
+          var approvedBy = approvalsData ? (approvalsData.approved_by || []) : [];
+          var unresolvedCount = 0;
+          if (discussions) {
+            (discussions || []).forEach(function(d) {
+              if (d.notes && d.notes.length && d.notes[0].resolvable && !d.notes[0].resolved) {
+                unresolvedCount++;
+              }
+            });
           }
-          return { threads: 0, changesLines: changesLines, changesFiles: changesFiles, conflicts: conflicts };
+          return { threads: unresolvedCount, changesLines: changesLines, changesFiles: changesFiles, conflicts: conflicts, approvedBy: approvedBy };
         })
         .then(function(meta) {
-          _mrMetaCache[entry.href] = { threads: meta.threads, changesLines: meta.changesLines, changesFiles: meta.changesFiles, conflicts: meta.conflicts, ts: Date.now() };
+          _mrMetaCache[entry.href] = { threads: meta.threads, changesLines: meta.changesLines, changesFiles: meta.changesFiles, conflicts: meta.conflicts, approvedBy: meta.approvedBy, ts: Date.now() };
           _jiraRenderingBadges = true;
           if (showThreads) renderThreadsBadge(entry.item, meta.threads);
           if (showSize) renderSizeBadge(entry.item, meta.changesLines, meta.changesFiles);
           if (showConflicts && meta.conflicts) renderConflictBadge(entry.item);
+          if (showApprovals && meta.approvedBy) renderApprovalIndicator(entry.item, meta.approvedBy, username);
           _jiraRenderingBadges = false;
         })
         .catch(function() {});
@@ -1541,13 +1612,13 @@
   // =========================================================================
 
   if (isMrListPage()) {
-    var listDefaults = { dim_drafts: false, highlight_own_mrs: false, show_only_mine: false, show_needs_review: false, show_copy_mr: false, show_reviewer_badge: false, show_threads_badge: false, show_size_badge: false, show_conflicts_badge: false, show_jira_details: false, skip_confirmations: false, jira_url: '', jira_ticket_regex: '' };
+    var listDefaults = { dim_drafts: false, highlight_own_mrs: false, show_only_mine: false, show_needs_review: false, show_copy_mr: false, show_reviewer_badge: false, show_threads_badge: false, show_size_badge: false, show_conflicts_badge: false, show_approval_badge: false, show_jira_details: false, skip_confirmations: false, jira_url: '', jira_ticket_regex: '' };
     try {
       chrome.storage.sync.get(listDefaults, function(s) {
         if (chrome.runtime.lastError) return;
         _skipConfirmations = !!s.skip_confirmations;
 
-        var needsUsername = s.highlight_own_mrs || s.show_only_mine || s.show_needs_review || s.show_reviewer_badge;
+        var needsUsername = s.highlight_own_mrs || s.show_only_mine || s.show_needs_review || s.show_reviewer_badge || s.show_approval_badge;
         var usernamePromise = needsUsername ? getCurrentUsername() : Promise.resolve(null);
 
         usernamePromise.then(function(username) {
@@ -1558,8 +1629,8 @@
             if (s.show_reviewer_badge && username) {
               fetchAndRenderReviewerBadges(username);
             }
-            if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge) {
-              fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge);
+            if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge || s.show_approval_badge) {
+              fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge, s.show_approval_badge, username);
             }
             if (s.jira_url) {
               setJiraTicketRegex(s.jira_ticket_regex);
@@ -1615,7 +1686,7 @@
             _observerTimer = setTimeout(function() {
               if (s.jira_url) fetchAndRenderJiraStatuses(s.jira_url, s.show_jira_details);
               if (s.show_reviewer_badge && username) fetchAndRenderReviewerBadges(username);
-              if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge) fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge);
+              if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge || s.show_approval_badge) fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge, s.show_approval_badge, username);
               if (s.show_only_mine || s.show_needs_review) injectListToggles(username, s);
             }, 1000);
           });

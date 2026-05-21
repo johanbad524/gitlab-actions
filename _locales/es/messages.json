@@ -267,9 +267,17 @@
   "cardConflictsTitle": { "message": "Indicador de conflictos" },
   "cardConflictsDesc": { "message": "Muestra una insignia roja CONFLICTOS en la página de detalle del MR cuando la rama tiene conflictos de fusión." },
 
+  "cardApprovalTitle": { "message": "Indicador de mi aprobación" },
+  "cardApprovalDesc": { "message": "Muestra si has aprobado cada MR en la lista. Distingue tu aprobación de las aprobaciones de otros." },
+
   "showThreadsBadge": { "message": "Cantidad de hilos sin resolver en la lista de MR" },
   "showSizeBadge": { "message": "Etiquetas de tamaño de MR (S/M/L/XL) en la lista" },
   "showConflictsBadge": { "message": "Mostrar indicador de conflictos en la lista de MR" },
+  "showApprovalBadge": { "message": "Mostrar cantidad de aprobaciones y mi indicador en la lista de MR" },
+  "approvalBadgeMine": { "message": "Aprobado por ti" },
+  "approvalBadgeOthers": { "message": "Aprobado por otros" },
+  "approvalBadgeMineShort": { "message": "Tú" },
+  "approvalBadgeApproved": { "message": "Approved" },
   "cardThreadsTitle": { "message": "Hilos sin resolver" },
   "cardThreadsDesc": { "message": "Muestra una insignia roja con la cantidad de hilos de discusión sin resolver en cada MR de la lista." },
   "cardSizeTitle": { "message": "Etiquetas de tamaño de MR" },

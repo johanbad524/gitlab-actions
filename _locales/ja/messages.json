@@ -267,9 +267,17 @@
   "cardConflictsTitle": { "message": "コンフリクト表示" },
   "cardConflictsDesc": { "message": "ブランチにマージコンフリクトがある場合、MR詳細ページに赤いCONFLICTSバッジを表示します。" },
 
+  "cardApprovalTitle": { "message": "自分の承認インジケーター" },
+  "cardApprovalDesc": { "message": "MRリストで各MRを承認済みかどうかを表示します。自分の承認と他のユーザーの承認を区別します。" },
+
   "showThreadsBadge": { "message": "MRリストに未解決スレッド数を表示" },
   "showSizeBadge": { "message": "MRリストにサイズラベル (S/M/L/XL) を表示" },
   "showConflictsBadge": { "message": "MR一覧にコンフリクト表示" },
+  "showApprovalBadge": { "message": "MRリストに承認数と自分の承認インジケーターを表示" },
+  "approvalBadgeMine": { "message": "あなたが承認済み" },
+  "approvalBadgeOthers": { "message": "他のユーザーが承認" },
+  "approvalBadgeMineShort": { "message": "あなた" },
+  "approvalBadgeApproved": { "message": "Approved" },
   "cardThreadsTitle": { "message": "未解決スレッド数" },
   "cardThreadsDesc": { "message": "MRリストの各MRに未解決のディスカッションスレッド数を赤いバッジで表示します。" },
   "cardSizeTitle": { "message": "MRサイズラベル" },

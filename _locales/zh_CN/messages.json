@@ -267,9 +267,17 @@
   "cardConflictsTitle": { "message": "冲突指示器" },
   "cardConflictsDesc": { "message": "当分支存在合并冲突时，在MR详情页显示红色CONFLICTS徽章。" },
 
+  "cardApprovalTitle": { "message": "我的审批指示器" },
+  "cardApprovalDesc": { "message": "在MR列表中显示您是否已批准每个MR。区分您的审批和其他人的审批。" },
+
   "showThreadsBadge": { "message": "MR列表显示未解决讨论数" },
   "showSizeBadge": { "message": "MR列表显示大小标签 (S/M/L/XL)" },
   "showConflictsBadge": { "message": "在MR列表中显示冲突指示器" },
+  "showApprovalBadge": { "message": "在MR列表中显示审批数量和我的审批指示器" },
+  "approvalBadgeMine": { "message": "您已批准" },
+  "approvalBadgeOthers": { "message": "已被他人批准" },
+  "approvalBadgeMineShort": { "message": "您" },
+  "approvalBadgeApproved": { "message": "Approved" },
   "cardThreadsTitle": { "message": "未解决讨论数" },
   "cardThreadsDesc": { "message": "在MR列表中每个MR上显示红色徽章，标注未解决的讨论线程数量。" },
   "cardSizeTitle": { "message": "MR大小标签" },

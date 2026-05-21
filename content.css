@@ -490,6 +490,8 @@ li.gl-mr-ext-threads-badge {
   color: #991b1b;
 }
 
+/* My approval indicator — text only, inherits native GitLab badge styling */
+
 /* Jira ticket group wrapper */
 .gl-jira-ticket-group {
   display: inline-flex;

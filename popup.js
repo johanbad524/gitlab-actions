@@ -90,6 +90,7 @@ var DEFAULTS = Object.assign({}, BUTTON_DEFAULTS, {
   show_threads_badge: false,
   show_size_badge: false,
   show_conflicts_badge: false,
+  show_approval_badge: false,
   // show_group_by_author: false,
   collapse_bars: false,
   hide_right_sidebar: false,
@@ -238,6 +239,7 @@ function renderDefaultTab(container) {
     '<div class="toggle"><input type="checkbox" id="show_threads_badge"><label for="show_threads_badge">' + escHtml(t('showThreadsBadge')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="show_size_badge"><label for="show_size_badge">' + escHtml(t('showSizeBadge')) + '</label></div>' +
     '<div class="toggle"><input type="checkbox" id="show_conflicts_badge"><label for="show_conflicts_badge">' + escHtml(t('showConflictsBadge')) + '</label></div>' +
+    '<div class="toggle"><input type="checkbox" id="show_approval_badge"><label for="show_approval_badge">' + escHtml(t('showApprovalBadge')) + '</label></div>' +
     // '<div class="toggle"><input type="checkbox" id="show_group_by_author"><label for="show_group_by_author">' + escHtml(t('showGroupByAuthor')) + '</label></div>' +
     '<div class="sep"></div>' +
     '<h4>' + escHtml(t('uiCustomization')) + '</h4>' +
@@ -325,6 +327,7 @@ function renderDefaultTab(container) {
   document.getElementById('show_threads_badge').checked = allData.show_threads_badge || false;
   document.getElementById('show_size_badge').checked = allData.show_size_badge || false;
   document.getElementById('show_conflicts_badge').checked = allData.show_conflicts_badge || false;
+  document.getElementById('show_approval_badge').checked = allData.show_approval_badge || false;
   // document.getElementById('show_group_by_author').checked = allData.show_group_by_author || false;
   document.getElementById('collapse_bars').checked = allData.collapse_bars || false;
   document.getElementById('hide_right_sidebar').checked = allData.hide_right_sidebar || false;
@@ -851,6 +854,7 @@ function saveDefaultTab() {
   settings.show_threads_badge = document.getElementById('show_threads_badge').checked;
   settings.show_size_badge = document.getElementById('show_size_badge').checked;
   settings.show_conflicts_badge = document.getElementById('show_conflicts_badge').checked;
+  settings.show_approval_badge = document.getElementById('show_approval_badge').checked;
   // settings.show_group_by_author = document.getElementById('show_group_by_author').checked;
   settings.collapse_bars = document.getElementById('collapse_bars').checked;
   settings.hide_right_sidebar = document.getElementById('hide_right_sidebar').checked;

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.2
+
+### New features
+- **My approval indicator** — shows whether you have approved each MR on the list page. Green person+check icon when you approved, grey icon when approved by others only. Restores the distinction that GitLab removed in recent updates.
+
+---
+
 ## 1.7.1
 
 ### Bug fixes

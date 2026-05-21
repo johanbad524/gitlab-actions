@@ -252,9 +252,17 @@
   "cardConflictsTitle": { "message": "Konfliktanzeige" },
   "cardConflictsDesc": { "message": "Zeigt ein rotes KONFLIKTE-Badge auf der MR-Detailseite an, wenn der Branch Merge-Konflikte hat." },
 
+  "cardApprovalTitle": { "message": "Eigene Genehmigungsanzeige" },
+  "cardApprovalDesc": { "message": "Zeigt in der MR-Liste an, ob Sie jeden MR genehmigt haben. Unterscheidet Ihre Genehmigung von Genehmigungen anderer." },
+
   "showThreadsBadge": { "message": "Ungelöste Diskussionen in MR-Liste anzeigen" },
   "showSizeBadge": { "message": "MR-Größenlabels (S/M/L/XL) in Liste anzeigen" },
   "showConflictsBadge": { "message": "Konfliktanzeige in MR-Liste anzeigen" },
+  "showApprovalBadge": { "message": "Genehmigungsanzahl und eigene Genehmigung in MR-Liste anzeigen" },
+  "approvalBadgeMine": { "message": "Von Ihnen genehmigt" },
+  "approvalBadgeOthers": { "message": "Von anderen genehmigt" },
+  "approvalBadgeMineShort": { "message": "Sie" },
+  "approvalBadgeApproved": { "message": "Approved" },
   "cardThreadsTitle": { "message": "Ungelöste Diskussionen" },
   "cardThreadsDesc": { "message": "Zeigt ein rotes Badge mit der Anzahl ungelöster Diskussions-Threads bei jedem MR in der Liste." },
   "cardSizeTitle": { "message": "MR-Größenlabels" },
