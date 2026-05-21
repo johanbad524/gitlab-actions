@@ -13,6 +13,75 @@
 
   if (!isGitLab()) return;
 
+  // =========================================================================
+  // Centralized DOM selectors — cross-version GitLab compatibility
+  // When GitLab changes DOM, update selectors HERE (one place).
+  // Order matters: preferred (newest) selectors first, legacy last.
+  // =========================================================================
+  var SEL = {
+    // MR list items
+    mrItem: '[data-testid="issuable-item-wrapper"], .merge-request, li.issue, [data-testid="issuable-container"] > li, .issuable-list > li',
+    // Title link inside MR list item
+    titleLink: '[data-testid="issuable-title-link"], [data-testid="issuable-title"] a, .issue-title-text a, .merge-request-title-text a',
+    // Title container (wraps the title link)
+    titleWrap: '[data-testid="issuable-title"], .issue-title-text, .merge-request-title-text',
+    // Author link inside MR list item
+    authorLink: '[data-testid="issuable-author"] a, .issuable-authored a.author-link, .author a',
+    // Controls bar (ul) inside MR list item
+    controls: 'ul.controls, [data-testid="issuable-controls"]',
+    // Comments indicator inside controls
+    comments: '[data-testid="issuable-comments"], .issuable-comments',
+    // Filter/search bar container on list page
+    filterBar: '.filter-dropdown-container, .vue-filtered-search-bar-container, [data-testid="filtered-search-input"], .gl-search-box-by-type',
+    // List container for MutationObserver
+    listContainer: '[data-testid="issuable-list"], [data-testid="issuable-container"], .issuable-list, .merge-requests-holder, .content-list',
+    // Commit page: SHA button group
+    commitShaGroup: '.commit-sha-group, .commit-actions .btn-group',
+    // Commit page: SHA element with hash value
+    commitSha: '[data-clipboard-text], .label-monospace, .commit-sha',
+    // Commit page: row/container for a single commit
+    commitRow: '.commit, [data-testid="commit-item"], .commit-content, li',
+    // Commit page: commit message element
+    commitMsg: '.commit-row-message, .item-title a, .commit-title'
+  };
+
+  // Try querySelector against a multi-selector string; returns first match or null.
+  // If parent is null/undefined, returns null safely.
+  function q(parent, selectorStr) {
+    if (!parent) return null;
+    try { return parent.querySelector(selectorStr); } catch(e) { return null; }
+  }
+
+  // Try querySelectorAll; returns NodeList (possibly empty).
+  function qAll(parent, selectorStr) {
+    if (!parent) return [];
+    try { return parent.querySelectorAll(selectorStr); } catch(e) { return []; }
+  }
+
+  // Find the closest ancestor matching any selector in a comma-separated string
+  function qUp(el, selectorStr) {
+    if (!el) return null;
+    try { return el.closest(selectorStr); } catch(e) { return null; }
+  }
+
+  // Safely insert newNode after refNode inside container.
+  // Handles case where refNode is nested deeper inside container (not a direct child).
+  function insertAfterSafe(container, newNode, refNode) {
+    if (!container || !newNode) return;
+    if (!refNode) { container.appendChild(newNode); return; }
+    // If refNode is a direct child of container, use insertBefore on nextSibling
+    if (refNode.parentNode === container) {
+      if (refNode.nextSibling) {
+        container.insertBefore(newNode, refNode.nextSibling);
+      } else {
+        container.appendChild(newNode);
+      }
+    } else {
+      // refNode is nested deeper — append to container end
+      container.appendChild(newNode);
+    }
+  }
+
   function escHtml(s) {
     if (!s) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -268,7 +337,7 @@
   }
 
   function applyMrListEnhancements(settings, username) {
-    var mrItems = document.querySelectorAll('.merge-request, li.issue, [data-testid="issuable-container"] > li, .issuable-list > li');
+    var mrItems = qAll(document, SEL.mrItem);
     if (!mrItems.length) return;
 
     mrItems.forEach(function(item) {
@@ -277,7 +346,7 @@
 
       // Dim drafts
       if (settings.dim_drafts) {
-        var titleEl = item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+        var titleEl = q(item, SEL.titleLink);
         if (titleEl) {
           var title = titleEl.textContent.trim();
           if (/^(\[Draft\]|Draft:|WIP:)/i.test(title)) {
@@ -288,7 +357,7 @@
 
       // Highlight own MRs
       if (settings.highlight_own_mrs && username) {
-        var authorLink = item.querySelector('.issuable-authored a.author-link, .author a, [data-testid="issuable-author"] a');
+        var authorLink = q(item, SEL.authorLink);
         if (authorLink) {
           var href = authorLink.getAttribute('href') || '';
           if (href.endsWith('/' + username)) {
@@ -299,8 +368,8 @@
 
       // Copy MR button in controls bar
       if (settings.show_copy_mr) {
-        var copyTitleEl = item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
-        var controlsUl = item.querySelector('ul.controls');
+        var copyTitleEl = q(item, SEL.titleLink);
+        var controlsUl = q(item, SEL.controls);
         if (copyTitleEl && controlsUl) {
           var li = document.createElement('li');
           li.className = 'gl-block has-tooltip !gl-mr-0 gl-mr-ext-copy-li';
@@ -353,8 +422,17 @@
   function injectListToggles(username, settings) {
     if (document.querySelector('.gl-mr-ext-toolbar')) return;
 
-    var container = document.querySelector('.filter-dropdown-container');
-    if (!container) return;
+    var container = q(document, SEL.filterBar);
+    if (!container) {
+      // Vue may not have rendered the filter bar yet — look for any
+      // toolbar-like area near the top of the MR list as a fallback
+      container = q(document, '.top-area, .issues-filters, .nav-controls');
+    }
+    if (!container) return false; // signal caller to retry
+
+    var toolbar = document.createElement('div');
+    toolbar.className = 'gl-mr-ext-toolbar';
+    toolbar.style.cssText = 'display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle;';
 
     if (settings.show_only_mine && username) {
       var btnMine = document.createElement('button');
@@ -366,7 +444,7 @@
       btnMine.addEventListener('click', function() {
         toggleUrlParam('author_username', username);
       });
-      container.appendChild(btnMine);
+      toolbar.appendChild(btnMine);
     }
 
     if (settings.show_needs_review && username) {
@@ -379,8 +457,13 @@
       btnReview.addEventListener('click', function() {
         toggleUrlParam('reviewer_username', username);
       });
-      container.appendChild(btnReview);
+      toolbar.appendChild(btnReview);
     }
+
+    if (toolbar.childNodes.length) {
+      container.appendChild(toolbar);
+    }
+    return true; // success
   }
 
   // =========================================================================
@@ -422,9 +505,9 @@
   function renderJiraLoaders(itemTicketMap) {
     itemTicketMap.forEach(function(entry) {
       if (entry.item.querySelector('.gl-jira-badge')) return; // already has badges
-      var titleEl = entry.item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+      var titleEl = q(entry.item, SEL.titleLink);
       if (!titleEl) return;
-      var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+      var titleContainer = qUp(titleEl, SEL.titleWrap) || titleEl.parentNode;
       if (titleContainer.querySelector('.gl-jira-loader')) return; // already has loader
       var loader = document.createElement('span');
       loader.className = 'gl-jira-loader';
@@ -438,14 +521,14 @@
   }
 
   function renderJiraBadges(mrItem, statuses) {
-    var titleEl = mrItem.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+    var titleEl = q(mrItem, SEL.titleLink);
     if (!titleEl) return;
 
     var title = titleEl.textContent.trim();
     var tickets = parseTickets(title);
     if (!tickets.length) return;
 
-    var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+    var titleContainer = qUp(titleEl, SEL.titleWrap) || titleEl.parentNode;
 
     // Build expected badge key to avoid redundant re-renders
     var badgeKey = tickets.map(function(t) {
@@ -1099,14 +1182,14 @@
     if (_jiraFetching) return;
     _jiraUrlStored = jiraUrl;
 
-    var mrItems = document.querySelectorAll('.merge-request, li.issue, [data-testid="issuable-container"] > li, .issuable-list > li');
+    var mrItems = qAll(document, SEL.mrItem);
     if (!mrItems.length) return;
 
     // Collect all tickets from all MR titles
     var allTickets = [];
     var itemTicketMap = [];
     mrItems.forEach(function(item) {
-      var titleEl = item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+      var titleEl = q(item, SEL.titleLink);
       if (!titleEl) return;
       var tickets = parseTickets(titleEl.textContent.trim());
       if (tickets.length) {
@@ -1215,9 +1298,9 @@
     if (mrItem.querySelector('.gl-reviewer-badge')) return;
     if (!isReviewer) return;
 
-    var titleEl = mrItem.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+    var titleEl = q(mrItem, SEL.titleLink);
     if (!titleEl) return;
-    var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+    var titleContainer = qUp(titleEl, SEL.titleWrap) || titleEl.parentNode;
 
     var badge = document.createElement('span');
     badge.className = 'gl-reviewer-badge';
@@ -1229,14 +1312,14 @@
   function fetchAndRenderReviewerBadges(username) {
     if (_reviewerFetching) return;
 
-    var mrItems = document.querySelectorAll('.merge-request, li.issue, [data-testid="issuable-container"] > li, .issuable-list > li');
+    var mrItems = qAll(document, SEL.mrItem);
     if (!mrItems.length) return;
 
     var toFetch = [];
     var now = Date.now();
 
     mrItems.forEach(function(item) {
-      var titleEl = item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+      var titleEl = q(item, SEL.titleLink);
       if (!titleEl) return;
       var href = titleEl.href;
       var cached = _reviewerCache[href];
@@ -1258,9 +1341,9 @@
     _jiraRenderingBadges = true;
     toFetch.forEach(function(entry) {
       if (entry.item.querySelector('.gl-reviewer-badge, .gl-reviewer-loader')) return;
-      var titleEl = entry.item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+      var titleEl = q(entry.item, SEL.titleLink);
       if (!titleEl) return;
-      var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+      var titleContainer = qUp(titleEl, SEL.titleWrap) || titleEl.parentNode;
       var loader = document.createElement('span');
       loader.className = 'gl-reviewer-loader gl-jira-loader';
       titleContainer.appendChild(loader);
@@ -1306,7 +1389,7 @@
     if (mrItem.querySelector('.gl-mr-ext-threads-badge')) return;
     if (count === 0) return;
 
-    var controlsUl = mrItem.querySelector('ul.controls');
+    var controlsUl = q(mrItem, SEL.controls);
     if (!controlsUl) return;
 
     var li = document.createElement('li');
@@ -1316,7 +1399,7 @@
       '<span>' + count + '</span>';
 
     // Insert after comments icon if found, otherwise prepend to controls
-    var commentsEl = mrItem.querySelector('[data-testid="issuable-comments"]');
+    var commentsEl = q(mrItem, SEL.comments);
     var commentsLi = commentsEl ? commentsEl.closest('li') : null;
     if (commentsLi && commentsLi.nextSibling) {
       controlsUl.insertBefore(li, commentsLi.nextSibling);
@@ -1329,9 +1412,9 @@
 
   function renderSizeBadge(mrItem, changesLines, changesFiles) {
     if (mrItem.querySelector('.gl-mr-ext-size-badge')) return;
-    var titleEl = mrItem.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+    var titleEl = q(mrItem, SEL.titleLink);
     if (!titleEl) return;
-    var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+    var titleContainer = qUp(titleEl, SEL.titleWrap) || titleEl.parentNode;
 
     var label, cls, tooltip;
     if (changesLines > 0) {
@@ -1355,44 +1438,34 @@
     badge.textContent = label;
     badge.title = tooltip;
     // Always insert right after the title link, before Jira badges
-    var firstAfterTitle = titleEl.nextSibling;
-    if (firstAfterTitle) {
-      titleContainer.insertBefore(badge, firstAfterTitle);
-    } else {
-      titleContainer.appendChild(badge);
-    }
+    insertAfterSafe(titleContainer, badge, titleEl);
   }
 
   function renderConflictBadge(mrItem) {
     if (mrItem.querySelector('.gl-mr-ext-conflict-badge')) return;
-    var titleEl = mrItem.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+    var titleEl = q(mrItem, SEL.titleLink);
     if (!titleEl) return;
-    var titleContainer = titleEl.closest('.merge-request-title-text, .issue-title-text, [data-testid="issuable-title"]') || titleEl.parentNode;
+    var titleContainer = qUp(titleEl, SEL.titleWrap) || titleEl.parentNode;
     var badge = document.createElement('span');
     badge.className = 'gl-mr-ext-conflict-badge';
     badge.title = msg('conflictsBadgeHint') || 'This merge request has conflicts';
     badge.textContent = msg('conflictsBadge') || 'CONFLICTS';
     // Insert right after size badge, or after title link
     var sizeBadge = mrItem.querySelector('.gl-mr-ext-size-badge');
-    var insertAfter = sizeBadge || titleEl;
-    if (insertAfter.nextSibling) {
-      titleContainer.insertBefore(badge, insertAfter.nextSibling);
-    } else {
-      titleContainer.appendChild(badge);
-    }
+    insertAfterSafe(titleContainer, badge, sizeBadge || titleEl);
   }
 
   function fetchAndRenderMrMeta(showThreads, showSize, showConflicts) {
     if (_mrMetaFetching) return;
 
-    var mrItems = document.querySelectorAll('.merge-request, li.issue, [data-testid="issuable-container"] > li, .issuable-list > li');
+    var mrItems = qAll(document, SEL.mrItem);
     if (!mrItems.length) return;
 
     var toFetch = [];
     var now = Date.now();
 
     mrItems.forEach(function(item) {
-      var titleEl = item.querySelector('.merge-request-title-text a, .issue-title-text a, [data-testid="issuable-title"] a');
+      var titleEl = q(item, SEL.titleLink);
       if (!titleEl) return;
       var href = titleEl.href;
       var cached = _mrMetaCache[href];
@@ -1478,28 +1551,52 @@
         var usernamePromise = needsUsername ? getCurrentUsername() : Promise.resolve(null);
 
         usernamePromise.then(function(username) {
-          if (s.dim_drafts || s.highlight_own_mrs || s.show_copy_mr) {
-            applyMrListEnhancements(s, username);
+          function runAllListFeatures() {
+            if (s.dim_drafts || s.highlight_own_mrs || s.show_copy_mr) {
+              applyMrListEnhancements(s, username);
+            }
+            if (s.show_reviewer_badge && username) {
+              fetchAndRenderReviewerBadges(username);
+            }
+            if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge) {
+              fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge);
+            }
+            if (s.jira_url) {
+              setJiraTicketRegex(s.jira_ticket_regex);
+              fetchAndRenderJiraStatuses(s.jira_url, s.show_jira_details);
+            }
           }
 
+          // Run immediately; if DOM not ready yet, retry a few times
+          var mrItems = qAll(document, SEL.mrItem);
+          if (mrItems.length) {
+            runAllListFeatures();
+          } else {
+            // Vue list may not be rendered yet — poll up to 3s
+            var _retryCount = 0;
+            var _retryInterval = setInterval(function() {
+              _retryCount++;
+              if (qAll(document, SEL.mrItem).length) {
+                clearInterval(_retryInterval);
+                runAllListFeatures();
+              } else if (_retryCount >= 6) {
+                clearInterval(_retryInterval);
+              }
+            }, 500);
+          }
+
+          // Inject filter toggles (with retry if filter bar not rendered yet)
           if (s.show_only_mine || s.show_needs_review) {
-            injectListToggles(username, s);
-          }
-
-          // Reviewer badge from comments
-          if (s.show_reviewer_badge && username) {
-            fetchAndRenderReviewerBadges(username);
-          }
-
-          // Unresolved threads + MR size + conflict badges
-          if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge) {
-            fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge);
-          }
-
-          // Jira statuses
-          if (s.jira_url) {
-            setJiraTicketRegex(s.jira_ticket_regex);
-            fetchAndRenderJiraStatuses(s.jira_url, s.show_jira_details);
+            var toggleOk = injectListToggles(username, s);
+            if (!toggleOk) {
+              var _toggleRetry = 0;
+              var _toggleTimer = setInterval(function() {
+                _toggleRetry++;
+                if (injectListToggles(username, s) || _toggleRetry >= 6) {
+                  clearInterval(_toggleTimer);
+                }
+              }, 500);
+            }
           }
 
           // Re-run on dynamic content (Vue list updates)
@@ -1519,11 +1616,29 @@
               if (s.jira_url) fetchAndRenderJiraStatuses(s.jira_url, s.show_jira_details);
               if (s.show_reviewer_badge && username) fetchAndRenderReviewerBadges(username);
               if (s.show_threads_badge || s.show_size_badge || s.show_conflicts_badge) fetchAndRenderMrMeta(s.show_threads_badge, s.show_size_badge, s.show_conflicts_badge);
+              if (s.show_only_mine || s.show_needs_review) injectListToggles(username, s);
             }, 1000);
           });
-          var listContainer = document.querySelector('.issuable-list, .merge-requests-holder, [data-testid="issuable-list"], .content-list');
-          if (listContainer) {
-            listObserver.observe(listContainer, { childList: true, subtree: true });
+
+          // Observe list container (with retry if not found immediately)
+          function startListObserver() {
+            var listContainer = q(document, SEL.listContainer);
+            if (listContainer) {
+              listObserver.observe(listContainer, { childList: true, subtree: true });
+              return true;
+            }
+            return false;
+          }
+          if (!startListObserver()) {
+            // Fallback: observe body until list appears
+            var _bodyObs = new MutationObserver(function() {
+              if (startListObserver()) {
+                _bodyObs.disconnect();
+              }
+            });
+            _bodyObs.observe(document.body, { childList: true, subtree: true });
+            // Clean up after 10s if list never appears
+            setTimeout(function() { _bodyObs.disconnect(); }, 10000);
           }
           window.addEventListener('beforeunload', function() { listObserver.disconnect(); });
         });
@@ -1713,20 +1828,42 @@
         if (!projectPath) return;
         var encodedProject = encodeURIComponent(projectPath);
 
+        function findCommitShaGroups() {
+          // Strategy 1: known CSS classes / data-testid (old + new GitLab)
+          var groups = qAll(document, SEL.commitShaGroup);
+          if (groups.length) return Array.prototype.slice.call(groups);
+
+          // Strategy 2: find clipboard buttons with 40-char hex SHA,
+          // then return their parent group (works even if classes change)
+          var result = [];
+          var seen = [];
+          var clipboardEls = qAll(document, '[data-clipboard-text]');
+          for (var i = 0; i < clipboardEls.length; i++) {
+            var text = clipboardEls[i].getAttribute('data-clipboard-text') || '';
+            if (/^[0-9a-f]{7,40}$/.test(text)) {
+              var group = clipboardEls[i].closest('.btn-group, .commit-sha-group, .gl-button-group') || clipboardEls[i].parentElement;
+              if (group && seen.indexOf(group) === -1) {
+                seen.push(group);
+                result.push(group);
+              }
+            }
+          }
+          return result;
+        }
+
         function injectCherryPickButtons() {
-          var shaGroups = document.querySelectorAll('.commit-sha-group');
+          var shaGroups = findCommitShaGroups();
           if (!shaGroups.length) return;
 
           shaGroups.forEach(function(group) {
             if (group.querySelector('.gl-cherry-pick-btn')) return;
 
-            var shaEl = group.querySelector('[data-clipboard-text], .label-monospace, .commit-sha');
+            var shaEl = q(group, SEL.commitSha);
             var sha = shaEl ? (shaEl.getAttribute('data-clipboard-text') || shaEl.textContent.trim()) : '';
-            if (!sha) return;
+            if (!sha || !/^[0-9a-f]{7,40}$/.test(sha)) return;
 
-            var row = group.closest('.commit, li, [data-testid="commit-item"], .commit-content')
-              || group.parentElement;
-            var msgEl = row ? row.querySelector('.commit-row-message, .item-title a, .commit-title') : null;
+            var row = qUp(group, SEL.commitRow) || group.parentElement;
+            var msgEl = row ? q(row, SEL.commitMsg) : null;
             var commitMsg = msgEl ? msgEl.textContent.trim() : '';
 
             var btn = document.createElement('button');

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.1
+
+### Bug fixes
+- **GitLab 17.11 compatibility** — fixed broken selectors after GitLab migrated MR list and commits pages to Vue components. Cherry-pick buttons, size badges, conflict indicators, "Only mine" / "Needs my review" toggles, and Jira badges now work on GitLab 17.11+.
+- **Cross-version support** — all GitLab DOM selectors are now centralized (`SEL` object) with multiple fallbacks: `data-testid` attributes (stable GitLab API) as primary, legacy CSS classes as secondary. Supports GitLab 16.x through 17.11+.
+- **Robust cherry-pick detection** — commit SHA groups are now found via two strategies: CSS selectors first, then fallback to clipboard buttons with SHA hex pattern. Works even if GitLab changes all class names.
+- **Vue rendering timing** — added retry/polling for cases where Vue hasn't rendered the MR list or filter bar when the extension runs. List observer falls back to watching `document.body` until the list container appears.
+- **Badge insertion fix** — fixed `insertBefore` crash when title link is nested deeper inside the title container (new GitLab DOM structure).
+
+---
+
 ## 1.7.0
 
 ### New features
